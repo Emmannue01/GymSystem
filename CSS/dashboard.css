@@ -1,22 +1,20 @@
-/* styles.css */
-
 /* Custom scrollbar styles */
 .custom-scrollbar::-webkit-scrollbar {
     width: 6px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
-    background: #f1f1f1;
+    background: #1a1a1a;
     border-radius: 10px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: #888;
+    background: #fbbf24;
     border-radius: 10px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: #555;
+    background: #f59e0b;
 }
 
 /* Chart container */
@@ -55,4 +53,45 @@
 
 /* Button hover effects */
 .btn-primary {
-    @apply bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700}
+    @apply bg-yellow-500 text-black px-4 py-2 rounded-md hover:bg-yellow-400;
+}
+
+/* Sidebar styling override */
+.bg-indigo-900 {
+    background-color: #1a1a1a !important;
+}
+
+.bg-indigo-800 {
+    background-color: #fbbf24 !important;
+    color: #1a1a1a !important;
+}
+
+.border-indigo-800 {
+    border-color: #f59e0b !important;
+}
+
+.hover\:bg-indigo-800:hover {
+    background-color: #f59e0b !important;
+    color: #1a1a1a !important;
+}
+
+.text-indigo-600 {
+    color: #fbbf24 !important;
+}
+
+.hover\:text-indigo-800:hover {
+    color: #f59e0b !important;
+}
+
+.bg-indigo-600 {
+    background-color: #fbbf24 !important;
+    color: #1a1a1a !important;
+}
+
+.hover\:bg-indigo-700:hover {
+    background-color: #f59e0b !important;
+}
+
+.focus\:ring-indigo-500:focus {
+    --tw-ring-color: #fbbf24 !important;
+}
