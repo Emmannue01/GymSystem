@@ -339,34 +339,11 @@ async function cargarUsuarios() {
         });
 
         // Actualizar actividad reciente
-        actividadReciente.innerHTML = '';
-        snapshot.forEach((doc) => {
-            const data = doc.data();
-            const fechaInicio = data.Creado.toDate();
-            let tipo = (data.Tipo || "Basica");
-            
-            actividadReciente.innerHTML += `
-                <div class="flex items-start">
-                    <div class="p-2 rounded-full bg-blue-100 text-blue-600 mr-3">
-                        <i class="fas fa-user-plus"></i>
-                    </div>
-                    <div>
-                        <p class="text-sm font-medium">Nuevo miembro registrado</p>
-                        <p class="text-xs text-gray-500">${data.Nombre} ${data.Apellido || ''} ha adquirido la membresía ${tipo}</p>
-                        <p class="text-xs text-gray-400 mt-1">${fechaInicio.toLocaleString('es-ES')}</p>
-                    </div>
-                </div>
-            `;
-        });
-
+       
         actualizarGraficoMembresias();
         
     } catch (err) {
-        console.error("Error al cargar usuarios:", err);
-        document.getElementById('totalAccounts').textContent = '0';
-        document.getElementById('activeMemberships').textContent = '0';
-        document.getElementById('expiringSoon').textContent = '0';
-        document.getElementById('monthlyRevenue').textContent = '0';
+       
     }
 }
 
