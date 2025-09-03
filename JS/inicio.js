@@ -50,7 +50,7 @@ const showError = (message) => {
 // Observador del estado de autenticación: redirige si el usuario ya está logueado
 onAuthStateChanged(auth, async (user) => {
     if (user) {
-        // Usuario autenticado, ahora verificamos su rol en Firestore
+        
         setLoading(true); // Mostrar spinner mientras se verifica
         try {
             let userData;
@@ -97,8 +97,6 @@ onAuthStateChanged(auth, async (user) => {
                     userData = userDoc.data();
                 }
             }
-
-
             if (userData) {
                 const userRole = userData.rol;
                 

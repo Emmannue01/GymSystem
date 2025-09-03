@@ -1,11 +1,11 @@
 const firebaseConfig = {
-  apiKey: "AIzaSyBE7XnFDoaC7qPY8nykIGI-SCCMM6P_iG0",
-  authDomain: "gymrats-d16eb.firebaseapp.com",
-  databaseURL: "https://gymrats-d16eb-default-rtdb.firebaseio.com",
-  projectId: "gymrats-d16eb",
-  storageBucket: "gymrats-d16eb.firebasestorage.app",
-  messagingSenderId: "527362115499",
-  appId: "1:527362115499:web:bf44ba5c9bfeaf011874ee",
-  measurementId: "G-3TB5ZMZGWJ"
+  apiKey: "AIzaSyALeuGMHVzGuzEVejNcGx_9_MWEF5YHUx4",
+  authDomain: "colosossgym.firebaseapp.com",
+  databaseURL: "https://colosossgym-default-rtdb.firebaseio.com/",
+  projectId: "colosossgym",
+  storageBucket: "colosossgym.firebasestorage.app",
+  messagingSenderId: "498715862896",
+  appId: "1:498715862896:web:d44ff8eda38aa3493991b5",
+  measurementId: "G-H52V06S4QX"
 };
 export { firebaseConfig };
