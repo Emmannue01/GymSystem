@@ -120,7 +120,7 @@ onAuthStateChanged(auth, async (user) => {
                         break;
                 }
             } else {
-                console.log('No hay usuario autenticado.');
+                setLoading(false);
             }
         } catch (error) {
             
@@ -138,12 +138,7 @@ googleLoginBtn.addEventListener('click', async () => {
         await signInWithPopup(auth, provider);
         // La redirección la maneja onAuthStateChanged
     } catch (error) {
-        // Mejoramos el log para ver el error específico de Firebase
-        console.error("--- ERROR DE AUTENTICACIÓN CON GOOGLE ---");
-        console.error("Código:", error.code);
-        console.error("Mensaje:", error.message);
-        console.error("Objeto de error completo:", error);
-        console.error("-----------------------------------------");
+        
 
         // Damos un mensaje más útil al usuario
         let friendlyMessage = 'No se pudo iniciar sesión con Google. Revisa la consola para más detalles.';
