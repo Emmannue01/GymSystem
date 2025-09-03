@@ -97,6 +97,8 @@ onAuthStateChanged(auth, async (user) => {
                     userData = userDoc.data();
                 }
             }
+
+
             if (userData) {
                 const userRole = userData.rol;
                 

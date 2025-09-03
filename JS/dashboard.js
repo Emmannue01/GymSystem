@@ -307,10 +307,7 @@ async function cargarUsuarios() {
             miembrosTableBody.innerHTML += `
                 <tr class="fade-in">
                     <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="flex items-center">
-                            <div class="flex-shrink-0 h-10 w-10">
-                                <img class="h-10 w-10 rounded-full" src="https://i.pravatar.cc/40?u=${doc.id}" alt="">
-                            </div>
+                        <div
                             <div class="ml-4">
                                 <div class="text-sm font-medium text-gray-900">${data.Nombre} ${data.Apellido || ''}</div>
                                 <div class="text-sm text-gray-500">${data.Email || 'Sin email'}</div>
@@ -453,9 +450,7 @@ function mostrarMiembros() {
             <tr>
                 <td class="px-6 py-4 whitespace-nowrap">
                     <div class="flex items-center">
-                        <div class="flex-shrink-0 h-10 w-10">
-                            <img class="h-10 w-10 rounded-full" src="https://i.pravatar.cc/40?u=${member.id}" alt="">
-                        </div>
+                        
                         <div class="ml-4">
                             <div class="text-sm font-medium text-gray-900">${member.Nombre} ${member.Apellido}</div>
                             <div class="text-sm text-gray-500">${member.Email}</div>
