@@ -1,0 +1,6 @@
+{
+  "name": "colosossgym",
+  "scripts": {
+    "build": "node build.js"
+  }
+}
