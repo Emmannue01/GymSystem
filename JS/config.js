@@ -1,11 +1,11 @@
 const firebaseConfig = {
-    apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-    databaseURL: import.meta.env.VITE_FIREBASE_DATABASE_URL,
-    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-    appId: import.meta.env.VITE_FIREBASE_APP_ID,
-    measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
+  apiKey: "AIzaSyALeuGMHVzGuzEVejNcGx_9_MWEF5YHUx4",
+  authDomain: "colosossgym.firebaseapp.com",
+  databaseURL: "https://colosossgym-default-rtdb.firebaseio.com/",
+  projectId: "colosossgym",
+  storageBucket: "colosossgym.firebasestorage.app",
+  messagingSenderId: "498715862896",
+  appId: "1:498715862896:web:d44ff8eda38aa3493991b5",
+  measurementId: "G-H52V06S4QX"
 };
 export { firebaseConfig };
