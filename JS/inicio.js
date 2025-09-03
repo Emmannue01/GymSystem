@@ -59,14 +59,13 @@ onAuthStateChanged(auth, async (user) => {
             // 1. Buscar por email primero, es el caso más común para migrar.
             if (user.email) {
                 const userEmail = user.email.toLowerCase();
-                console.log(`Buscando usuario por email: ${userEmail}`);
                 const q = query(collection(db, "usuarios"), where("Email", "==", userEmail));
                 const querySnapshot = await getDocs(q);
 
                 if (!querySnapshot.empty) {
                     // 1a. Encontrado por email.
                     const foundDoc = querySnapshot.docs[0];
-                    console.log(`Usuario encontrado por email con doc ID: ${foundDoc.id}.`);
+                    
 
                     // Si el ID del documento no es el UID de Auth, migrarlo.
                     if (foundDoc.id !== user.uid) {
@@ -94,8 +93,7 @@ onAuthStateChanged(auth, async (user) => {
                 const userDocRef = doc(db, "usuarios", user.uid);
                 userDoc = await getDoc(userDocRef);
 
-                if (userDoc.exists()) {
-                    console.log(`Usuario encontrado por UID (${user.uid}).`);
+                if (userDoc.exists()) {                    
                     userData = userDoc.data();
                 }
             }
@@ -103,17 +101,29 @@ onAuthStateChanged(auth, async (user) => {
 
             if (userData) {
                 const userRole = userData.rol;
-                console.log(`Usuario autenticado con rol: ${userRole}`);
+                
                 switch (userRole) {
                     case 'administrador': 
                         window.location.href = "../HTML/dashboard.html"; 
+                        break;
+                        case 'cliente': 
+                        showError("No se pudo verificar tu identidad.");
+                        setLoading(false);
+                        break;
+                        case 'entrenador': 
+                        showError("No se pudo verificar tu identidad.");
+                        setLoading(false);
+                        break;
+                        case 'recepcionista': 
+                        showError("No se pudo verificar tu identidad.");
+                        setLoading(false);
                         break;
                 }
             } else {
                 console.log('No hay usuario autenticado.');
             }
         } catch (error) {
-            console.error("Error al obtener o migrar el rol del usuario:", error);
+            
             showError("No se pudo verificar tu rol. Intenta de nuevo.");
             setLoading(false);
         }
