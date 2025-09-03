@@ -40,11 +40,11 @@ onAuthStateChanged(auth, async (user) => {
             }
         } else {
             console.log("Acceso denegado. El usuario no es administrador.");
-            window.location.href = '../HTML/inicio.html';
+            window.location.href = '../index.html';
         }
     } else {
         console.log("Usuario no autenticado, redirigiendo a login.");
-        window.location.href = '../HTML/inicio.html';
+        window.location.href = '../index.html';
     }
 });
 
