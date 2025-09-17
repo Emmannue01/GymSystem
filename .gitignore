@@ -2,3 +2,4 @@
 /node_modules
 # Ignorar archivos de entorno que contienen secretos
 .env
+/JS/config.js
