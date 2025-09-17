@@ -1,5 +1,2 @@
 # Ignorar archivos con variables de entorno y secretos.
 # Estos archivos NUNCA deben ser subidos a un repositorio público.
-
-
-.env
