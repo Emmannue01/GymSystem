@@ -1,3 +1,8 @@
+// Verificar que las variables de entorno estén definidas
+if (!process.env.NEXT_PUBLIC_FIREBASE_API_KEY) {
+  console.error('Firebase API key no encontrada en variables de entorno');
+}
+
 export const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
@@ -8,3 +13,6 @@ export const firebaseConfig = {
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
   databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL,
 };
+
+// Verificar la configuración
+console.log('Firebase config loaded:', !!firebaseConfig.apiKey);
