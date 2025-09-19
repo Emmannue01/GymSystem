@@ -1,26 +1,11 @@
-let firebaseConfig = null;
-
-async function initializeFirebaseConfig() {
-  try {
-    const response = await fetch('/api/firebase-config');
-    if (!response.ok) {
-      throw new Error('Error al obtener la configuración de Firebase');
-    }
-    firebaseConfig = await response.json();
-  } catch (error) {
-    console.error('Error:', error);
-    // Fallback para desarrollo local
-    firebaseConfig = {
-      // Configuración mínima para desarrollo
-      projectId: "colosossgym",
-      databaseURL: "https://colosossgym-default-rtdb.firebaseio.com/"
-    };
-  }
-}
-
-export async function getFirebaseConfig() {
-  if (!firebaseConfig) {
-    await initializeFirebaseConfig();
-  }
-  return firebaseConfig;
-}
+export const firebaseConfig = {
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
+  databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL,
+};
+export default firebaseConfig;
