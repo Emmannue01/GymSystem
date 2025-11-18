@@ -17,7 +17,6 @@ import {
 } from 'firebase/auth';
 import { FaTimes } from 'react-icons/fa';
 
-// Importar Firebase y constantes desde archivos separados
 import { db, auth } from '../firebase';
 import { cloudinaryConfig } from '../firebase';
 
@@ -55,7 +54,6 @@ const TrainerDashboard = () => {
   const [bmiHeight, setBmiHeight] = useState('');
   const [bmiResult, setBmiResult] = useState(null);
 
-  // Autenticación
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser) {
@@ -69,14 +67,12 @@ const TrainerDashboard = () => {
     return () => unsubscribe();
   }, []);
 
-  // Cargar clientes
   useEffect(() => {
     if (user) {
       loadClients();
     }
   }, [user]);
 
-  // Filtrar clientes
   useEffect(() => {
     if (searchTerm.trim() === '') {
       setFilteredClients(clients);
@@ -602,7 +598,6 @@ const TrainerDashboard = () => {
             </div>
             
             <div className="p-6">
-              {/* Client Info */}
               <div className="flex flex-col md:flex-row gap-6 mb-8">
                 <div className="flex-shrink-0">
                   <img 

@@ -28,7 +28,6 @@ import {
 import { db, auth, rtdb as dbRTDB } from '../firebase';
 
 const RecepcionDashboard = () => {
-  // Estados principales
   const [stats, setStats] = useState({
     miembrosActivos: 0,
     tendencia: 0,
@@ -43,7 +42,6 @@ const RecepcionDashboard = () => {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [verTodos, setVerTodos] = useState(false);
   const [loading, setLoading] = useState(true);
-  // Estados del formulario de nuevo miembro
   const [nuevoMiembro, setNuevoMiembro] = useState({
     uid: '',
     nombre: '',
@@ -54,7 +52,6 @@ const RecepcionDashboard = () => {
     tipoMembresia: 'Básica',
     fechaInicio: new Date().toISOString().split('T')[0]
   });
-  // Estados del formulario de renovación
   const [renovacion, setRenovacion] = useState({
     userId: '',
     nombreCompleto: '',
@@ -67,7 +64,6 @@ const RecepcionDashboard = () => {
     email: ''
   });
 
-  // Guardia de autenticación
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
@@ -91,7 +87,6 @@ const RecepcionDashboard = () => {
             avatar: user.photoURL || 'https://i.pravatar.cc/32',
             email: user.email
           });
-          // Cargar todos los datos
           await cargarTodosDatos();
         } else {
           console.log("Acceso denegado. Usuario sin rol de recepción.");
@@ -184,7 +179,6 @@ const RecepcionDashboard = () => {
 
   const cargarAsistenciasRealtime = async () => {
     try {
-      // Obtener mapeo de UID a nombres
       const uidToName = {};
       const usuariosSnapshot = await getDocs(collection(db, "usuarios"));
       
@@ -218,7 +212,6 @@ const RecepcionDashboard = () => {
         return dateB - dateA;
       });
 
-      // Agrupar por UID
       const registrosAgrupados = {};
       registros.forEach(reg => {
         if (!registrosAgrupados[reg.uid]) {
@@ -446,7 +439,6 @@ const RecepcionDashboard = () => {
       const userData = userDoc.data();
       const fechaFin = new Date();
       let tipoNormalizado = "Basica";
-      // Calcular nueva fecha
       if (tipoMembresia === 'Estándar') {
         tipoNormalizado = "Estandar";
         fechaFin.setMonth(fechaFin.getMonth() + 3);
@@ -462,7 +454,6 @@ const RecepcionDashboard = () => {
       }
       
       const costoMembresia = costosSubscripcion[tipoMembresia] || 0;
-      // Registrar pago
       await addDoc(collection(db, "pagos"), {
         uid: userData.uid || userId,
         Nombre: `${userData.Nombre || ''} ${userData.Apellido || ''}`.trim(),
@@ -596,7 +587,6 @@ const RecepcionDashboard = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Nuevos Miembros */}
           <div className="bg-white rounded-xl shadow-md p-6">
             <h2 className="text-xl font-bold text-gray-800 mb-4">Nuevos Miembros</h2>
             <div className="space-y-4">
@@ -621,7 +611,6 @@ const RecepcionDashboard = () => {
             </div>
           </div>
 
-          {/* Últimos Accesos */}
           <div className="bg-white rounded-xl shadow-md p-6">
             <h2 className="text-xl font-bold text-gray-800 mb-4">Últimos Accesos</h2>
             <div className="space-y-2">
@@ -652,7 +641,6 @@ const RecepcionDashboard = () => {
             </div>
           </div>
 
-          {/* Próximas Renovaciones */}
           <div className="lg:col-span-2 bg-white rounded-xl shadow-md p-6">
             <h2 className="text-xl font-bold text-gray-800 mb-4">Próximas Renovaciones</h2>
             <div className="overflow-x-auto">
@@ -712,7 +700,6 @@ const RecepcionDashboard = () => {
         </div>
       </main>
 
-      {/* Modal Nuevo Miembro */}
       {showAddModal && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
           <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-1/2 lg:w-1/3 shadow-lg rounded-md bg-white max-h-[90vh] overflow-y-auto">

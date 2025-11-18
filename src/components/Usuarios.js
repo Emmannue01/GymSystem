@@ -92,7 +92,6 @@ const Usuarios = () => {
     });
   };
 
-  // Función para inicializar métricas con Firestore
   const inicializarMetricas = (uid) => {
     const trainerDocRef = doc(db, 'metricas', uid);
     
@@ -104,7 +103,6 @@ const Usuarios = () => {
         const processedMetrics = {};
         const ignoreKey = (k) => /(fecha|ultima|last|timestamp|^peso$|^altura$|^imc$)/i.test(k);
 
-        // Función para inferir unidad
         const inferUnit = (key) => {
           const k = (key || '').toLowerCase();
           if (k.includes('peso') || k.includes('kg') || k.includes('mass') || k.includes('masa')) return 'kg';
@@ -115,13 +113,11 @@ const Usuarios = () => {
           if (k.includes('imc')) return '';
           return '';
         };
-        // Procesar métricas
         Object.keys(trainerMetrics).forEach(key => {
           if (ignoreKey(key)) return;
 
           const value = trainerMetrics[key];
           if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
-            // Objeto anidado
             Object.keys(value).forEach(subKey => {
               if (ignoreKey(subKey)) return;
               const composedKey = `${key}_${subKey}`;
@@ -131,7 +127,6 @@ const Usuarios = () => {
               };
             });
           } else {
-            // Valor primitivo
             processedMetrics[key] = {
               valor: value,
               unidad: inferUnit(key)
@@ -140,7 +135,6 @@ const Usuarios = () => {
         });
 
         setMetrics(processedMetrics);
-        // Establecer peso, altura e IMC
         const pesoValue = trainerMetrics.peso !== undefined && trainerMetrics.peso !== null ? trainerMetrics.peso : null;
         const alturaValue = trainerMetrics.altura !== undefined && trainerMetrics.altura !== null ? trainerMetrics.altura : null;
         
@@ -166,7 +160,6 @@ const Usuarios = () => {
       setImc(null);
     }
   }, [peso, altura]);
-  // Funciones de progreso
   const ajustarMeta = (ajuste) => {
     if (vistaActual === 'semana') {
       const newMeta = Math.max(1, metaSemanal + ajuste);
@@ -181,11 +174,9 @@ const Usuarios = () => {
   const cambiarVista = (vista) => {
     setVistaActual(vista);
   };
-  // Calcular porcentaje de progreso
   const meta = vistaActual === 'semana' ? metaSemanal : metaMensual;
   const porcentaje = meta > 0 ? Math.min(100, (progreso / meta) * 100) : 0;
   const offset = circleCircumference - (porcentaje / 100) * circleCircumference;
-  // Función para humanizar claves
   const humanizeKey = (key) => {
     if (!key) return '';
     let s = key.replace(/_/g, ' ');
@@ -194,7 +185,6 @@ const Usuarios = () => {
     s = s.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
     return s;
   };
-  // Función para calcular porcentaje de barra visual
   const getBarPercentage = (valor, unidad) => {
     if (unidad === 'kg') {
       return Math.min(100, parseFloat(valor || 0) / 1.5);

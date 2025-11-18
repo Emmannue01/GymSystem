@@ -373,7 +373,6 @@ const Dashboard = () => {
                 fotoURL: fotoURL || '',
             };
 
-            // Eliminar el archivo de la carga útil para no guardarlo en Firestore
             delete memberPayload.fotoFile;
 
             let shouldRegisterPayment = false;
@@ -397,7 +396,6 @@ const Dashboard = () => {
                 await updateDoc(memberRef, memberPayload);
                 alert("Miembro actualizado exitosamente.");
             } else {
-                // Agregar nuevo miembro (UID manual como id de documento)
                 memberPayload.Creado = Timestamp.fromDate(fechaInicio);
                 const memberRef = doc(db, "usuarios", memberData.uid);
                 await setDoc(memberRef, memberPayload);
@@ -459,7 +457,6 @@ const Dashboard = () => {
                     await remove(ref(dbRTDB, 'activos/' + memberData.uid));
                 }
 
-                // Eliminar registros asociados en otras colecciones
                 const progressRef = doc(db, "progresos", memberId);
                 const metricsRef = doc(db, "metricas", memberId);
                 await deleteDoc(progressRef);
@@ -882,7 +879,6 @@ const Dashboard = () => {
         </div>
     );
 
-    // Agregar funciones para el manejo de búsqueda y filtros
     const handleSearch = (searchTerm) => {
         const term = searchTerm.toLowerCase();
         const filtered = allMembers.filter(member => 

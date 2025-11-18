@@ -35,13 +35,13 @@ const App = () => {
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(async (user) => {
       if (user) {
-        // Aquí obtendrías el rol del usuario desde Firestore
+     
         try {
           const userDoc = await getDoc(doc(db, 'usuarios', user.uid));
           const role = userDoc.data()?.rol || 'cliente';
           setUserRole(role);
         } catch (error) {
-          setUserRole('cliente'); // rol por defecto si no se encuentra
+          setUserRole('cliente'); 
         }
         setUser(user);
       } else {
@@ -120,7 +120,6 @@ const App = () => {
           }
         />
 
-        {/* Redirigir cualquier otra ruta al inicio */}
         <Route
           path="*"
           element={<Navigate to="/" replace />}

@@ -17,16 +17,12 @@ const styles = {
 const Login = () => {
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
-
-    // Función para subir la foto de perfil a Cloudinary
     const uploadProfileImageToCloudinary = async (imageUrl) => {
         if (!imageUrl) return null;
 
         const formData = new FormData();
-        // Cloudinary puede tomar una URL directamente como el "archivo" a subir
         formData.append('file', imageUrl);
         formData.append('upload_preset', cloudinaryConfig.uploadPreset);
-        // Opcional: guardar en una carpeta específica para perfiles
         formData.append('folder', 'perfiles_usuarios');
 
         try {
@@ -90,7 +86,6 @@ const Login = () => {
                         const fechaFin = new Date();
                         fechaFin.setMonth(fechaFin.getMonth());
 
-                        // Subir la foto de perfil de Google a Cloudinary
                         const cloudinaryPhotoURL = await uploadProfileImageToCloudinary(user.photoURL);
 
                         const newUser = {
