@@ -32,7 +32,6 @@ export default app;
 
 export const cloudinaryConfig = {
   
-  cloudName: 'dtf8s8epz',
-  uploadPreset: 'SistemaGestion',
-  uploadUrl:'https://api.cloudinary.com/v1_1/dtf8s8epz/image/upload'
-};
+  cloudName: process.env.REACT_APP_CLOUDINARY_PROYECT_NAME,
+  uploadPreset: process.env.REACT_APP_CLOUDINARY_UPLOAD_PRESET,
+  uploadUrl: process.env.REACT_APP_IMAGE_DATABASE_URL};
