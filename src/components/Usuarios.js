@@ -289,10 +289,8 @@ const Usuarios = () => {
               </div>
             </div>
 
-              <div className="flex items-center justify-center py-20">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500"></div>
-              </div>
-            ) : (
+             
+            
               <div className="flex flex-col items-center flex-grow justify-center">
                 {/* Circular Progress */}
                 <div className="relative w-32 h-32 mb-4">
@@ -359,7 +357,7 @@ const Usuarios = () => {
                   </div>
                 </div>
               </div>
-            )
+            
           </div>
 
           <div className="bg-white rounded-xl shadow-md p-6 flex flex-col">
