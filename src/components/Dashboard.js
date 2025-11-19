@@ -629,42 +629,6 @@ const Dashboard = () => {
                             </tbody>
                         </table>
                     </div>
-                    <div className="px-6 py-4 border-t flex items-center justify-between">
-                        <div className="text-sm text-gray-500">
-                            Mostrando <span className="font-medium">{((currentPage - 1) * membersPerPage) + 1}</span> a <span className="font-medium">
-                                {Math.min(currentPage * membersPerPage, filteredMembers.length)}
-                            </span> de <span className="font-medium">{filteredMembers.length}</span> miembros
-                        </div>
-                        <div className="flex space-x-2">
-                            <button 
-                                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                                disabled={currentPage === 1}
-                                className="px-3 py-1 rounded-md bg-gray-200 text-gray-700 hover:bg-gray-300 disabled:opacity-50"
-                            >
-                                <FaChevronLeft />
-                            </button>
-                            {Array.from({ length: Math.ceil(filteredMembers.length / membersPerPage) }, (_, i) => (
-                                <button
-                                    key={i + 1}
-                                    onClick={() => setCurrentPage(i + 1)}
-                                    className={`px-3 py-1 rounded-md ${
-                                        currentPage === i + 1
-                                        ? 'bg-indigo-600 text-white'
-                                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                                    }`}
-                                >
-                                    {i + 1}
-                                </button>
-                            ))}
-                            <button 
-                                onClick={() => setCurrentPage(prev => prev + 1)}
-                                disabled={currentPage >= Math.ceil(filteredMembers.length / membersPerPage)}
-                                className="px-3 py-1 rounded-md bg-gray-200 text-gray-700 hover:bg-gray-300 disabled:opacity-50"
-                            >
-                                <FaChevronRight />
-                            </button>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
