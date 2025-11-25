@@ -328,6 +328,23 @@ const Dashboard = () => {
         }
     };
 
+    const openAddMemberModal = () => {
+        setEditingMember(null);
+        setMemberFormData({
+            uid: '',
+            rol: 'cliente',
+            Genero: 'Masculino',
+            Nombre: '',
+            Apellido: '',
+            Email: '',
+            Telefono: '',
+            Tipo: '',
+            fotoFile: null,
+            fechaInicio: new Date().toISOString().split('T')[0],
+        });
+        setShowAddMemberModal(true);
+    };
+
     const handleAddMember = async (memberData) => {
         if (!editingMember) {
             const q = query(collection(db, "usuarios"), where("uid", "==", memberData.uid));
@@ -336,6 +353,11 @@ const Dashboard = () => {
                 alert("Error: El UID ya está en uso por otro miembro.");
                 return;
             }
+        }
+
+        // Generar UID si está vacío y es un nuevo miembro
+        if (!editingMember && !memberData.uid) {
+            memberData.uid = doc(collection(db, 'usuarios')).id;
         }
 
         try {
@@ -550,7 +572,7 @@ const Dashboard = () => {
                                 onChange={(e) => handleTypeChange(e.target.value)}
                             >
                                 <option value="">Todos los tipos</option>
-                                <option value="Basica">Básica</option>
+                                <option value="Basica">Básica</option> 
                                 <option value="Estandar">Estándar</option>
                                 <option value="Premium">Premium</option>
                                 <option value="VIP">VIP</option>
@@ -563,7 +585,7 @@ const Dashboard = () => {
                                 <FaSync />
                             </button>
                             <button 
-                                onClick={() => setShowAddMemberModal(true)}
+                                onClick={openAddMemberModal}
                                 className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition flex items-center justify-center"
                             >
                                 <FaPlus className="mr-2" />
