@@ -7,7 +7,7 @@ import {ref,getDatabase,remove,onValue} from 'firebase/database';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 import { Doughnut } from 'react-chartjs-2';
 import { cloudinaryConfig } from '../firebase';
-import * as XLSX from 'xlsx';import { FaDumbbell, FaUsers, FaIdCard, FaCalendarCheck, FaChartBar, FaBars, FaTimes, FaHeadset, FaPlus, FaEdit, FaTrash, FaExclamationCircle, FaWallet } from 'react-icons/fa';
+import * as XLSX from 'xlsx';import { FaDumbbell, FaUsers, FaIdCard, FaCalendarCheck, FaChartBar, FaBars, FaTimes, FaHeadset, FaPlus, FaEdit, FaTrash, FaExclamationCircle, FaWallet, FaSync } from 'react-icons/fa';
 
 
 ChartJS.register(ArcElement, Tooltip, Legend);
@@ -555,6 +555,13 @@ const Dashboard = () => {
                                 <option value="Premium">Premium</option>
                                 <option value="VIP">VIP</option>
                             </select>
+                            <button
+                                onClick={sincronizarTodosLosUsuariosRTDB}
+                                className="bg-gray-200 text-gray-700 px-3 py-2 rounded-md hover:bg-gray-300 transition flex items-center justify-center text-sm"
+                                title="Sincronizar todos los usuarios activos a RTDB"
+                            >
+                                <FaSync />
+                            </button>
                             <button 
                                 onClick={() => setShowAddMemberModal(true)}
                                 className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition flex items-center justify-center"
@@ -850,6 +857,25 @@ const Dashboard = () => {
             member.Email?.toLowerCase().includes(term)
         );
         setFilteredMembers(filtered);
+    };
+
+    const sincronizarTodosLosUsuariosRTDB = async () => {
+        if (!window.confirm('¿Estás seguro de que quieres sincronizar todos los usuarios con la base de datos en tiempo real? Esto puede sobreescribir datos existentes.')) {
+            return;
+        }
+        
+        alert('Iniciando sincronización. Esto puede tardar unos segundos...');
+        try {
+            for (const member of allMembers) {
+                if (member.uid && member.SuscripcionHasta) {
+                    await actualizarEstadoActivoEnRTDB(member.uid, member.SuscripcionHasta);
+                }
+            }
+            alert('Sincronización completada exitosamente.');
+        } catch (error) {
+            console.error("Error durante la sincronización masiva a RTDB:", error);
+            alert('Ocurrió un error durante la sincronización.');
+        }
     };
 
     const handleFilterChange = (filterValue) => {
