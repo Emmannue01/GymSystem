@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { User, Dumbbell, ChevronDown, LogOut, QrCode, ScanLine } from 'lucide-react';
-import { doc, getDoc, onSnapshot } from 'firebase/firestore';
+import { doc, getDoc, onSnapshot, setDoc } from 'firebase/firestore';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
-import { getDatabase, ref, onValue } from 'firebase/database';
+import { getDatabase, ref, onValue, get, set } from 'firebase/database';
 import { db, auth } from '../firebase';
 import QRCodeModal from './QRCodeModal';
 import QRScannerModal from './QRScannerModal';
@@ -201,9 +201,36 @@ const Usuarios = () => {
     signOut(auth).catch(error => {});
   };
 
-  const handleScan = (data) => {
+  const handleScan = async (uid) => {
     setShowQRScanner(false);
-    alert(`Código QR escaneado: ${data}`);
+    if (!uid) {
+        alert('Código QR no válido.');
+        return;
+    }
+
+    try {
+        const activoRef = ref(dbRTDB, `activos/${uid}/activa`);
+        const activoSnap = await get(activoRef);
+
+        if (!activoSnap.exists() || activoSnap.val() !== true) {
+            alert('La membresía de este usuario no está activa. No se puede registrar la asistencia.');
+            return;
+        }
+
+        const timestamp = new Date().toISOString();
+        const newReadingRef = ref(dbRTDB, `lecturas/${uid}_${Date.now()}`);
+        await set(newReadingRef, { uid: uid, timestamp: timestamp });
+
+        const userDoc = await getDoc(doc(db, "usuarios", uid));
+        const userName = userDoc.exists() ? `${userDoc.data().Nombre} ${userDoc.data().Apellido}` : uid;
+
+        alert(`Asistencia registrada para ${userName}. ¡Bienvenido/a!`);
+        if (user && (uid === user.uid || uid === userData.uid)) {
+            inicializarProgreso(uid);
+        }
+    } catch (error) {
+        alert('Error al registrar la asistencia: ' + error.message);
+    }
   };
 
   return (

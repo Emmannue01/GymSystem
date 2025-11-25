@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Users, CalendarCheck, UserPlus, RefreshCw, X, ChevronDown, LogOut, QrCode } from 'lucide-react';
 import QRScannerModal from './QRScannerModal';
+import QRCodeModal from './QRCodeModal';
 import { 
   doc, 
   getDoc, 
@@ -57,12 +58,14 @@ const RecepcionDashboard = () => {
     tipoMembresia: 'Básica'
   });
 
+  const [showMyQR, setShowMyQR] = useState(false);
   const [showQRScanner, setShowQRScanner] = useState(false);
 
   const [usuario, setUsuario] = useState({
     nombre: 'Usuario',
     avatar: 'https://i.pravatar.cc/32',
-    email: ''
+    email: '',
+    uid: null
   });
 
   useEffect(() => {
@@ -86,7 +89,8 @@ const RecepcionDashboard = () => {
           setUsuario({
             nombre: user.displayName || user.email.split('@')[0],
             avatar: user.photoURL || 'https://i.pravatar.cc/32',
-            email: user.email
+            email: user.email,
+            uid: user.uid
           });
           await cargarTodosDatos();
         } else {
@@ -499,10 +503,10 @@ const RecepcionDashboard = () => {
     }
 
     try {
-        const activoRef = ref(dbRTDB, `activos/${uid}`);
+        const activoRef = ref(dbRTDB, `activos/${uid}/activa`);
         const activoSnap = await get(activoRef);
 
-        if (!activoSnap.exists() || !activoSnap.val().activo) {
+        if (!activoSnap.exists() || activoSnap.val() !== true) {
             alert('La membresía de este usuario no está activa. No se puede registrar la asistencia.');
             return;
         }
@@ -624,6 +628,13 @@ const RecepcionDashboard = () => {
             >
               <QrCode className="mr-2 h-5 w-5" />
               Escanear QR Asistencia
+            </button>
+            <button
+              onClick={() => setShowMyQR(true)}
+              className="bg-yellow-500 hover:bg-yellow-600 text-white py-3 px-4 rounded-lg flex items-center justify-center transition-all"
+            >
+              <QrCode className="mr-2 h-5 w-5" />
+              Código QR
             </button>
           </div>
         </div>
@@ -929,6 +940,14 @@ const RecepcionDashboard = () => {
         onClose={() => setShowQRScanner(false)}
         onScan={handleScan}
       />
+
+      {usuario.uid && (
+        <QRCodeModal
+          isOpen={showMyQR}
+          onClose={() => setShowMyQR(false)}
+          value={usuario.uid}
+          studentName={usuario.nombre} />
+      )}
     </div>
   );
 };
