@@ -26,8 +26,8 @@ const Usuarios = () => {
   const dbRTDB = getDatabase();
   const inicializarProgreso = useCallback((uid) => {
     const lecturasRef = ref(dbRTDB, 'lecturas');
-    
-    onValue(lecturasRef, (snapshot) => {
+
+    const unsubscribe = onValue(lecturasRef, (snapshot) => {
       const allLecturasData = snapshot.val() || {};
       
       const ahora = new Date();
@@ -62,7 +62,9 @@ const Usuarios = () => {
     }, (error) => {
       setProgreso(0);
     });
-  }, [dbRTDB, vistaActual]);
+
+    return unsubscribe;
+  }, [dbRTDB, vistaActual]); // useCallback dependencies
 
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, async (currentUser) => {
@@ -81,7 +83,6 @@ const Usuarios = () => {
             
             if (savedMetaSemanal) setMetaSemanal(parseInt(savedMetaSemanal));
             if (savedMetaMensual) setMetaMensual(parseInt(savedMetaMensual));
-            inicializarProgreso(checkinUid);
             inicializarMetricas(checkinUid);
           }
         } catch (error) {}
@@ -91,7 +92,17 @@ const Usuarios = () => {
     });
 
     return () => unsubscribeAuth();
-  }, [inicializarProgreso]);
+  }, []); // Removed inicializarProgreso from here
+
+  useEffect(() => {
+    let unsubscribeProgreso;
+    if (user && userData?.uid) {
+      unsubscribeProgreso = inicializarProgreso(userData.uid);
+    }
+    return () => {
+      if (unsubscribeProgreso) unsubscribeProgreso();
+    };
+  }, [user, userData, inicializarProgreso]);
 
   const inicializarMetricas = (uid) => {
     const trainerDocRef = doc(db, 'metricas', uid);
@@ -219,15 +230,15 @@ const Usuarios = () => {
 
         const timestamp = new Date().toISOString();
         const newReadingRef = ref(dbRTDB, `lecturas/${uid}_${Date.now()}`);
-        await set(newReadingRef, { uid: uid, timestamp: timestamp });
+        await set(newReadingRef, { uid: uid, timestamp: timestamp }); // Aseguramos usar el UID del QR
 
         const userDoc = await getDoc(doc(db, "usuarios", uid));
         const userName = userDoc.exists() ? `${userDoc.data().Nombre} ${userDoc.data().Apellido}` : uid;
 
         alert(`Asistencia registrada para ${userName}. ¡Bienvenido/a!`);
         if (user && (uid === user.uid || uid === userData.uid)) {
-            inicializarProgreso(uid);
-        }
+            // The real-time listener will update the progress automatically.
+        } 
     } catch (error) {
         alert('Error al registrar la asistencia: ' + error.message);
     }
