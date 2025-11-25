@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { User, Dumbbell, ChevronDown, LogOut } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { User, Dumbbell, ChevronDown, LogOut, QrCode, ScanLine } from 'lucide-react';
 import { doc, getDoc, onSnapshot } from 'firebase/firestore';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { getDatabase, ref, onValue } from 'firebase/database';
 import { db, auth } from '../firebase';
+import QRCodeModal from './QRCodeModal';
+import QRScannerModal from './QRScannerModal';
 
 const Usuarios = () => {  
   const [user, setUser] = useState(null);
@@ -13,43 +15,16 @@ const Usuarios = () => {
   const [metaSemanal, setMetaSemanal] = useState(5);
   const [metaMensual, setMetaMensual] = useState(20);
   const [progreso, setProgreso] = useState(0);
-  const [progressLoading, setProgressLoading] = useState(true);
   const [metrics, setMetrics] = useState({});
   const [metricsLoading, setMetricsLoading] = useState(true);
   const [peso, setPeso] = useState(null);
   const [altura, setAltura] = useState(null);
   const [imc, setImc] = useState(null);
   const circleCircumference = 251.2;
+  const [showQR, setShowQR] = useState(false);
+  const [showQRScanner, setShowQRScanner] = useState(false);
   const dbRTDB = getDatabase();
-  useEffect(() => {
-    const unsubscribeAuth = onAuthStateChanged(auth, async (currentUser) => {
-      if (currentUser) {
-        setUser(currentUser);
-        try {
-          const userDocRef = doc(db, "usuarios", currentUser.uid);
-          const userDoc = await getDoc(userDocRef);
-
-          if (userDoc.exists()) {
-            const data = userDoc.data();
-            setUserData(data);
-            const checkinUid = data.uid || currentUser.uid;
-            const savedMetaSemanal = localStorage.getItem(`metaSemanal_${checkinUid}`);
-            const savedMetaMensual = localStorage.getItem(`metaMensual_${checkinUid}`);
-            
-            if (savedMetaSemanal) setMetaSemanal(parseInt(savedMetaSemanal));
-            if (savedMetaMensual) setMetaMensual(parseInt(savedMetaMensual));
-            inicializarProgreso(checkinUid);
-            inicializarMetricas(checkinUid);
-          }
-        } catch (error) {}
-      } else {
-        window.location.href = 'index.html';
-      }
-    });
-
-    return () => unsubscribeAuth();
-  }, []);
-  const inicializarProgreso = (uid) => {
+  const inicializarProgreso = useCallback((uid) => {
     const lecturasRef = ref(dbRTDB, 'lecturas');
     
     onValue(lecturasRef, (snapshot) => {
@@ -57,7 +32,6 @@ const Usuarios = () => {
       
       const ahora = new Date();
       let inicio, fin;
-      const meta = vistaActual === 'semana' ? metaSemanal : metaMensual;
 
       if (vistaActual === 'semana') {
         const hoy = new Date(ahora);
@@ -85,12 +59,39 @@ const Usuarios = () => {
       }
       
       setProgreso(progresoCalculado);
-      setProgressLoading(false);
     }, (error) => {
       setProgreso(0);
-      setProgressLoading(false);
     });
-  };
+  }, [dbRTDB, vistaActual]);
+
+  useEffect(() => {
+    const unsubscribeAuth = onAuthStateChanged(auth, async (currentUser) => {
+      if (currentUser) {
+        setUser(currentUser);
+        try {
+          const userDocRef = doc(db, "usuarios", currentUser.uid);
+          const userDoc = await getDoc(userDocRef);
+
+          if (userDoc.exists()) {
+            const data = userDoc.data();
+            setUserData(data);
+            const checkinUid = data.uid || currentUser.uid;
+            const savedMetaSemanal = localStorage.getItem(`metaSemanal_${checkinUid}`);
+            const savedMetaMensual = localStorage.getItem(`metaMensual_${checkinUid}`);
+            
+            if (savedMetaSemanal) setMetaSemanal(parseInt(savedMetaSemanal));
+            if (savedMetaMensual) setMetaMensual(parseInt(savedMetaMensual));
+            inicializarProgreso(checkinUid);
+            inicializarMetricas(checkinUid);
+          }
+        } catch (error) {}
+      } else {
+        window.location.href = 'index.html';
+      }
+    });
+
+    return () => unsubscribeAuth();
+  }, [inicializarProgreso]);
 
   const inicializarMetricas = (uid) => {
     const trainerDocRef = doc(db, 'metricas', uid);
@@ -200,6 +201,11 @@ const Usuarios = () => {
     signOut(auth).catch(error => {});
   };
 
+  const handleScan = (data) => {
+    setShowQRScanner(false);
+    alert(`Código QR escaneado: ${data}`);
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 font-sans">
       <header className="bg-indigo-900 text-white shadow-lg">
@@ -252,6 +258,7 @@ const Usuarios = () => {
                   ? `Tu membresía está activa hasta el ${userData.SuscripcionHasta.toDate().toLocaleDateString('es-ES')}`
                   : 'Verificando estado de membresía...'}
               </p>
+              
               <div className="flex space-x-2">
                 <span className="bg-white/20 px-3 py-1 rounded-full text-sm">
                   Plan: {userData?.Tipo || '...'}
@@ -259,6 +266,17 @@ const Usuarios = () => {
               </div>
             </div>
           </div>
+        </div>
+        
+        <div className="mb-6 flex flex-wrap items-center justify-center gap-4">
+          <button onClick={() => setShowQR(true)} className="bg-yellow-400 hover:bg-yellow-500 text-indigo-900 font-bold py-2 px-5 rounded-lg inline-flex items-center transition-colors shadow-md">
+            <QrCode className="mr-2" />
+            <span>Mi Código QR</span>
+          </button>
+          <button onClick={() => setShowQRScanner(true)} className="bg-blue-400 hover:bg-blue-500 text-white font-bold py-2 px-5 rounded-lg inline-flex items-center transition-colors shadow-md">
+            <ScanLine className="mr-2" />
+            <span>Escanear QR</span>
+          </button>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
@@ -422,6 +440,21 @@ const Usuarios = () => {
           </div>
         </div>
       </main>
+
+      {user && userData && (
+        <QRCodeModal
+          isOpen={showQR}
+          onClose={() => setShowQR(false)}
+          value={userData.uid || user.uid}
+          studentName={`${userData.Nombre || ''} ${userData.Apellido || ''}`.trim()}
+        />
+      )}
+
+      <QRScannerModal
+        isOpen={showQRScanner}
+        onClose={() => setShowQRScanner(false)}
+        onScan={handleScan}
+      />
     </div>
   );
 };

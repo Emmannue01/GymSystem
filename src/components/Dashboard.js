@@ -7,8 +7,7 @@ import {ref,getDatabase,remove,onValue} from 'firebase/database';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 import { Doughnut } from 'react-chartjs-2';
 import { cloudinaryConfig } from '../firebase';
-import * as XLSX from 'xlsx';
-import { FaDumbbell, FaUsers, FaTachometerAlt, FaIdCard, FaCalendarCheck, FaChartBar, FaBars, FaTimes, FaHeadset, FaPlus, FaEdit, FaTrash, FaExclamationCircle, FaWallet,FaChevronLeft, FaChevronRight } from 'react-icons/fa';
+import * as XLSX from 'xlsx';import { FaDumbbell, FaUsers, FaIdCard, FaCalendarCheck, FaChartBar, FaBars, FaTimes, FaHeadset, FaPlus, FaEdit, FaTrash, FaExclamationCircle, FaWallet } from 'react-icons/fa';
 
 
 ChartJS.register(ArcElement, Tooltip, Legend);
@@ -33,9 +32,7 @@ const Dashboard = () => {
     const [recentMembers, setRecentMembers] = useState([]);
     const [showSidebar, setShowSidebar] = useState(false);
     const [allMembers, setAllMembers] = useState([]);
-    const [filteredMembers, setFilteredMembers] = useState([]);
-    const [currentPage, setCurrentPage] = useState(1);
-    const [membersPerPage] = useState(10);
+    const [filteredMembers, setFilteredMembers] = useState([]);    
     const [showMembersModal, setShowMembersModal] = useState(false);
     const [showAddMemberModal, setShowAddMemberModal] = useState(false);
     const [editingMember, setEditingMember] = useState(null);
@@ -60,10 +57,10 @@ const Dashboard = () => {
         fechaInicio: new Date().toISOString().split('T')[0],
     });
 
-    const formatDate = (date) => {
+    const formatDate = useCallback((date) => {
         if (!date) return '-';
         return new Date(date).toLocaleDateString('es-ES');
-    };
+    }, []);
 
     const cargarAsistenciasRealtimeRTDB = useCallback(() => {
         const dbRTDB = getDatabase();
@@ -124,7 +121,7 @@ const Dashboard = () => {
         });
 
         return unsubscribe;
-    }, [formatDate]);
+    }, [formatDate]); // formatDate is now stable
 
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -508,6 +505,8 @@ const Dashboard = () => {
                     break;
                 case 'ingresos':
                     break;
+                default:
+                    break;
             }
             await exportToExcel(data, `Reporte_${type}.xlsx`);
         } catch (error) {
@@ -851,7 +850,6 @@ const Dashboard = () => {
             member.Email?.toLowerCase().includes(term)
         );
         setFilteredMembers(filtered);
-        setCurrentPage(1);
     };
 
     const handleFilterChange = (filterValue) => {
@@ -881,7 +879,6 @@ const Dashboard = () => {
                 break;
         }
         setFilteredMembers(filtered);
-        setCurrentPage(1);
     };
 
     const handleTypeChange = (typeValue) => {
@@ -893,7 +890,6 @@ const Dashboard = () => {
             );
             setFilteredMembers(filtered);
         }
-        setCurrentPage(1);
     };
 
 

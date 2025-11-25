@@ -7,7 +7,6 @@ import {
   updateDoc,
   setDoc,
   serverTimestamp,
-  addDoc,
   query,
   where
 } from 'firebase/firestore';
@@ -15,10 +14,12 @@ import {
   onAuthStateChanged,
   signOut
 } from 'firebase/auth';
-import { FaTimes } from 'react-icons/fa';
+import { FaTimes, FaQrcode, FaCamera } from 'react-icons/fa';
 
 import { db, auth } from '../firebase';
 import { cloudinaryConfig } from '../firebase';
+import QRCodeModal from './QRCodeModal';
+import QRScannerModal from './QRScannerModal';
 
 
 const TrainerDashboard = () => {
@@ -32,6 +33,8 @@ const TrainerDashboard = () => {
   const [showModal, setShowModal] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [showMyQR, setShowMyQR] = useState(false);
+  const [showQRScanner, setShowQRScanner] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [metrics, setMetrics] = useState({
     peso: 0,
@@ -325,6 +328,11 @@ const TrainerDashboard = () => {
     return date.toLocaleDateString();
   };
 
+  const handleClientScan = (clientId) => {
+    setShowQRScanner(false);
+    viewClientDetails(clientId);
+  };
+
   return (
     <div className="flex h-screen overflow-hidden bg-gray-100">
       <div className={`sidebar bg-indigo-800 text-white w-64 flex-shrink-0 fixed md:relative z-50 h-full transition-transform duration-300 ${showSidebar ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
@@ -407,6 +415,12 @@ const TrainerDashboard = () => {
                     onClick={handleSignOut}
                     className="w-full text-left px-3 py-2 hover:bg-gray-100"
                   >
+                    <i className="fas fa-qrcode mr-2"></i>Mi Código QR
+                  </button>
+                  <button 
+                    onClick={() => setShowMyQR(true)}
+                    className="w-full text-left px-3 py-2 hover:bg-gray-100 flex items-center"
+                  >
                     Cerrar sesión
                   </button>
                 </div>
@@ -435,15 +449,22 @@ const TrainerDashboard = () => {
           {activeTab === 'client-tab' && (
             <div>
               <div className="mb-6 flex justify-between items-center">
-                <h3 className="text-lg font-medium">Lista de Clientes</h3>
+                <div className="flex items-center space-x-4">
+                  <h3 className="text-lg font-medium">Lista de Clientes</h3>
+                  <button 
+                    onClick={() => setShowQRScanner(true)}
+                    className="px-3 py-1.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 flex items-center text-sm"
+                  >
+                    <FaCamera className="mr-2" /> Escanear QR de Cliente
+                  </button>
+                </div>
                 <div className="relative">
-                  <input 
+                  <input
                     type="text"
                     value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    placeholder="Buscar cliente..." 
-                    className="pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  />
+                    onChange={e => setSearchTerm(e.target.value)}
+                    placeholder="Buscar cliente..."
+                    className="pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" />
                   <i className="fas fa-search absolute left-3 top-3 text-gray-400"></i>
                 </div>
               </div>
@@ -581,6 +602,20 @@ const TrainerDashboard = () => {
           )}
         </main>
       </div>
+
+      {user && (
+        <QRCodeModal
+          isOpen={showMyQR}
+          onClose={() => setShowMyQR(false)}
+          value={user.uid}
+          studentName={user.displayName || user.email} />
+      )}
+
+      <QRScannerModal
+        isOpen={showQRScanner}
+        onClose={() => setShowQRScanner(false)}
+        onScan={handleClientScan}
+      />
 
       {showModal && currentClient && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-2 sm:p-4">

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Users, CalendarCheck, UserPlus, RefreshCw, X, ChevronDown, LogOut } from 'lucide-react';
+import { Users, CalendarCheck, UserPlus, RefreshCw, X, ChevronDown, LogOut, QrCode } from 'lucide-react';
+import QRScannerModal from './QRScannerModal';
 import { 
-  getFirestore, 
   doc, 
   getDoc, 
   setDoc, 
@@ -17,7 +17,6 @@ import {
 } from 'firebase/firestore';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { 
-  getDatabase, 
   ref, 
   query as queryRTDB, 
   orderByChild, 
@@ -57,6 +56,8 @@ const RecepcionDashboard = () => {
     nombreCompleto: '',
     tipoMembresia: 'Básica'
   });
+
+  const [showQRScanner, setShowQRScanner] = useState(false);
 
   const [usuario, setUsuario] = useState({
     nombre: 'Usuario',
@@ -100,7 +101,7 @@ const RecepcionDashboard = () => {
     });
 
     return () => unsubscribe();
-  }, []);
+  }, []); // cargarTodosDatos se define dentro y no necesita ser dependencia
 
   const cargarTodosDatos = async () => {
     await cargarUsuarios();
@@ -322,7 +323,7 @@ const RecepcionDashboard = () => {
 
   const actualizarEstadoActivoEnRTDB = async (uid, fechaFin) => {
     try {
-      const memberRef = ref(dbRTDB, `miembros/${uid}`);
+      const memberRef = ref(dbRTDB, `activos/${uid}`);
       await set(memberRef, {
         activo: true,
         suscripcionHasta: fechaFin.getTime()
@@ -490,6 +491,40 @@ const RecepcionDashboard = () => {
     }
   };
 
+  const handleScan = async (uid) => {
+    setShowQRScanner(false);
+    if (!uid) {
+        alert('Código QR no válido.');
+        return;
+    }
+
+    try {
+        const activoRef = ref(dbRTDB, `activos/${uid}`);
+        const activoSnap = await get(activoRef);
+
+        if (!activoSnap.exists() || !activoSnap.val().activo) {
+            alert('La membresía de este usuario no está activa. No se puede registrar la asistencia.');
+            return;
+        }
+
+        const timestamp = new Date().toISOString();
+        const newReadingRef = ref(dbRTDB, `lecturas/${uid}_${Date.now()}`);
+
+        await set(newReadingRef, {
+            uid: uid,
+            timestamp: timestamp
+        });
+
+        const userDoc = await getDoc(doc(db, "usuarios", uid));
+        const userName = userDoc.exists() ? `${userDoc.data().Nombre} ${userDoc.data().Apellido}` : uid;
+
+        alert(`Asistencia registrada para ${userName}. ¡Bienvenido/a!`);
+        await cargarAsistenciasRealtime();
+    } catch (error) {
+        alert('Error al registrar la asistencia: ' + error.message);
+    }
+  };
+
   const cerrarSesion = async () => {
     try {
       await signOut(auth);
@@ -582,6 +617,13 @@ const RecepcionDashboard = () => {
             >
               <RefreshCw className="mr-2 h-5 w-5" />
               Renovar Membresía
+            </button>
+            <button
+              onClick={() => setShowQRScanner(true)}
+              className="bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-lg flex items-center justify-center transition-all"
+            >
+              <QrCode className="mr-2 h-5 w-5" />
+              Escanear QR Asistencia
             </button>
           </div>
         </div>
@@ -881,6 +923,12 @@ const RecepcionDashboard = () => {
           </div>
         </div>
       )}
+
+      <QRScannerModal
+        isOpen={showQRScanner}
+        onClose={() => setShowQRScanner(false)}
+        onScan={handleScan}
+      />
     </div>
   );
 };
