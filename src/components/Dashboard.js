@@ -35,6 +35,8 @@ const Dashboard = () => {
     const [filteredMembers, setFilteredMembers] = useState([]);    
     const [showMembersModal, setShowMembersModal] = useState(false);
     const [showAddMemberModal, setShowAddMemberModal] = useState(false);
+    const [showEmployeesModal, setShowEmployeesModal] = useState(false);
+    const [filteredEmployees, setFilteredEmployees] = useState([]);
     const [editingMember, setEditingMember] = useState(null);
     const [showAsistenciasModal, setShowAsistenciasModal] = useState(false);
     const [showMemberDetailsModal, setShowMemberDetailsModal] = useState(false);
@@ -42,6 +44,9 @@ const Dashboard = () => {
     const [showReportesModal, setShowReportesModal] = useState(false);
     const [showMembresiasModal, setShowMembresiasModal] = useState(false);
     const [showProfileMenu, setShowProfileMenu] = useState(false);
+    const [showCertificatesModal, setShowCertificatesModal] = useState(false);
+    const [selectedEmployeeCertificates, setSelectedEmployeeCertificates] = useState([]);
+    const [selectedEmployeeInfo, setSelectedEmployeeInfo] = useState(null);
     const navigate = useNavigate();
     const [asistencias, setAsistencias] = useState([]);
     const [memberFormData, setMemberFormData] = useState({
@@ -272,6 +277,12 @@ const Dashboard = () => {
             });
             setAllMembers(allMembersData);
             setFilteredMembers(allMembersData);
+            
+            // Filtrar solo empleados (entrenadores, recepción y administradores)
+            const employeesData = allMembersData.filter(member => 
+                member.rol === 'entrenador' || member.rol === 'admin' || member.rol === 'administrador' || member.rol === 'recepcion'
+            );
+            setFilteredEmployees(employeesData);
 
         } catch (error) {
             console.error("Error loading Dashboard data:", error);
@@ -286,6 +297,22 @@ const Dashboard = () => {
             navigate('/');
         } catch (error) {
             console.error("Error signing out:", error);
+        }
+    };
+
+    const handleViewCertificates = async (member) => {
+        try {
+            const certDoc = await getDoc(doc(db, 'certificaciones', member.id));
+            if (certDoc.exists()) {
+                setSelectedEmployeeCertificates(certDoc.data().certificados || []);
+            } else {
+                setSelectedEmployeeCertificates([]);
+            }
+            setSelectedEmployeeInfo(member);
+            setShowCertificatesModal(true);
+        } catch (error) {
+            console.error("Error loading certificates:", error);
+            alert('Error al cargar certificaciones');
         }
     };
 
@@ -645,6 +672,11 @@ const Dashboard = () => {
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                            {member.rol === 'entrenador' && (
+                                                <button onClick={() => handleViewCertificates(member)} className="text-blue-600 hover:text-blue-900 mr-3 text-lg" title="Ver certificaciones">
+                                                    📜
+                                                </button>
+                                            )}
                                             <button onClick={() => handleEditMember(member)} className="text-yellow-600 hover:text-yellow-900 mr-3">
                                                 <FaEdit />
                                             </button>
@@ -657,6 +689,116 @@ const Dashboard = () => {
                             </tbody>
                         </table>
                     </div>
+                </div>
+            </div>
+        </div>
+    );
+
+    const renderEmployeesModal = () => (
+        <div className={`fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 ${showEmployeesModal ? '' : 'hidden'}`}>
+            <div className="relative top-4 mx-auto p-5 border w-11/12 md:w-5/6 lg:w-4/5 shadow-lg rounded-md bg-white">
+                <div className="flex justify-between items-center pb-4 border-b">
+                    <h3 className="text-xl font-semibold">Gestión de Empleados</h3>
+                    <button onClick={() => setShowEmployeesModal(false)} className="text-gray-500 hover:text-gray-700">
+                        <FaTimes />
+                    </button>
+                </div>
+                <div className="mt-4">
+                    <div className="flex flex-col md:flex-row justify-between mb-6 gap-4">
+                        <div className="relative w-full md:w-1/3">
+                            <input 
+                                type="text" 
+                                placeholder="Buscar empleados..." 
+                                className="w-full pl-10 pr-4 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                onChange={(e) => {
+                                    const searchTerm = e.target.value.toLowerCase();
+                                    const filtered = allMembers.filter(emp => 
+                                        (emp.rol === 'entrenador' || emp.rol === 'admin' || emp.rol === 'administrador' || emp.rol === 'recepcion') &&
+                                        (emp.Nombre?.toLowerCase().includes(searchTerm) || 
+                                         emp.Apellido?.toLowerCase().includes(searchTerm) ||
+                                         emp.Email?.toLowerCase().includes(searchTerm))
+                                    );
+                                    setFilteredEmployees(filtered);
+                                }}
+                            />
+                            <i className="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                        </div>
+                        <div className="flex flex-col sm:flex-row gap-2">
+                            <button 
+                                onClick={openAddMemberModal}
+                                className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition flex items-center justify-center"
+                            >
+                                <FaPlus className="mr-2" />
+                                Nuevo Empleado
+                            </button>
+                        </div>
+                    </div>
+                    <div className="overflow-x-auto">
+                        <table className="min-w-full divide-y divide-gray-200">
+                            <thead className="bg-gray-50">
+                                <tr>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contacto</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rol</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Género</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody className="bg-white divide-y divide-gray-200">
+                                {filteredEmployees.map(employee => (
+                                    <tr key={employee.id}>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <div className="flex items-center">
+                                                <div className="flex-shrink-0 h-10 w-10">
+                                                    <img 
+                                                        className="h-10 w-10 rounded-full object-cover"
+                                                        src={employee.fotoURL || `https://i.pravatar.cc/40?u=${employee.id}`}
+                                                        alt=""
+                                                    />
+                                                </div>
+                                                <div className="ml-4">
+                                                    <div className="text-sm font-medium text-gray-900">
+                                                        {employee.Nombre} {employee.Apellido}
+                                                    </div>
+                                                    <div className="text-sm text-gray-500">{employee.Email}</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <div className="text-sm text-gray-900">{employee.Telefono || 'N/A'}</div>
+                                            <div className="text-sm text-gray-500">{employee.Email}</div>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <span className="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                                {employee.rol}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                            {employee.Genero || 'N/A'}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                            {employee.rol === 'entrenador' && (
+                                                <button onClick={() => handleViewCertificates(employee)} className="text-blue-600 hover:text-blue-900 mr-3 text-lg" title="Ver certificaciones">
+                                                    📜
+                                                </button>
+                                            )}
+                                            <button onClick={() => handleEditMember(employee)} className="text-yellow-600 hover:text-yellow-900 mr-3">
+                                                <FaEdit />
+                                            </button>
+                                            <button onClick={() => handleDeleteMember(employee.id)} className="text-red-600 hover:text-red-900">
+                                                <FaTrash />
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                    {filteredEmployees.length === 0 && (
+                        <div className="text-center py-8 text-gray-500">
+                            <p>No hay empleados registrados</p>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>
@@ -1014,6 +1156,10 @@ const Dashboard = () => {
                             <FaUsers className="mr-3" />
                             <span>Gestión de Miembros</span>
                         </button>
+                        <button className="nav-item" data-action="empleados" onClick={() => setShowEmployeesModal(true)}>
+                            <FaHeadset className="mr-3" />
+                            <span>Gestión de Empleados</span>
+                        </button>
                         <button className="nav-item" data-action="membresias" onClick={() => setShowMembresiasModal(true)}>
                             <FaIdCard className="mr-3" />
                             <span>Membresías</span>
@@ -1030,14 +1176,21 @@ const Dashboard = () => {
                 </div>
 
                 <div className="px-4 py-4 bg-indigo-800 mx-4 rounded-lg mt-2 mb-5">
-                    <div className="flex items-center justify-between">
+                    <button
+                        onClick={() => {
+                            const phoneNumber = '7451020543'; // Reemplazar con tu número
+                            const message = 'Hola, necesito soporte con mi cuenta de GYM PRO.';
+                            const whatsappURL = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
+                            window.open(whatsappURL, '_blank');
+                        }}
+                        className="w-full flex items-center justify-between hover:bg-indigo-700 p-2 rounded transition"
+                    >
                         <div>
-                            <p className="text-sm text-white">Soporte</p>
-                            <p className="text-xs text-gray-300">745-102-0543</p>
+                            <p className="text-sm text-white text-left">Soporte</p>
+                            <p className="text-xs text-gray-300 text-left">745-102-0543</p>
                         </div>
                         <FaHeadset className="text-xl text-white" />
-                       
-                    </div>
+                    </button>
                 </div>
             </div>
 
@@ -1165,11 +1318,100 @@ const Dashboard = () => {
             </div>
 
             {renderMembersModal()}
+            {renderEmployeesModal()}
             {renderAddMemberModal()}
             {renderAsistenciasModal()}
             {renderReportesModal()}
             {renderMembresiasModal()}
             {showMemberDetailsModal && renderMemberDetailsModal()}
+            
+            {/* Modal de Certificaciones */}
+            <div className={`fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 ${showCertificatesModal ? '' : 'hidden'}`}>
+                <div className="relative top-4 mx-auto p-5 border w-11/12 md:w-2/3 lg:w-1/2 shadow-lg rounded-md bg-white">
+                    <div className="flex justify-between items-center pb-4 border-b">
+                        <div>
+                            <h3 className="text-xl font-semibold">Certificaciones de Empleado</h3>
+                            {selectedEmployeeInfo && (
+                                <p className="text-sm text-gray-600 mt-1">
+                                    {selectedEmployeeInfo.Nombre} {selectedEmployeeInfo.Apellido}
+                                </p>
+                            )}
+                        </div>
+                        <button onClick={() => setShowCertificatesModal(false)} className="text-gray-500 hover:text-gray-700">
+                            <FaTimes />
+                        </button>
+                    </div>
+                    
+                    <div className="mt-4">
+                        {selectedEmployeeInfo && (
+                            <div className="bg-gray-50 p-4 rounded-lg mb-6">
+                                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                    <div>
+                                        <p className="text-xs text-gray-500 uppercase">Email</p>
+                                        <p className="text-sm font-medium">{selectedEmployeeInfo.Email}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-xs text-gray-500 uppercase">Teléfono</p>
+                                        <p className="text-sm font-medium">{selectedEmployeeInfo.Telefono || 'N/A'}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-xs text-gray-500 uppercase">Género</p>
+                                        <p className="text-sm font-medium">{selectedEmployeeInfo.Genero || 'N/A'}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-xs text-gray-500 uppercase">Rol</p>
+                                        <p className="text-sm font-medium">{selectedEmployeeInfo.rol || 'N/A'}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-xs text-gray-500 uppercase">Estado</p>
+                                        <p className="text-sm font-medium">{selectedEmployeeInfo.Estado || 'N/A'}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                        
+                        <h4 className="text-lg font-semibold mb-4">Certificaciones ({selectedEmployeeCertificates.length})</h4>
+                        
+                        {selectedEmployeeCertificates.length === 0 ? (
+                            <div className="text-center py-8 text-gray-500">
+                                <i className="fas fa-certificate text-3xl mb-2" style={{display: 'block'}}></i>
+                                <p>No hay certificaciones registradas</p>
+                            </div>
+                        ) : (
+                            <div className="space-y-3 max-h-96 overflow-y-auto">
+                                {selectedEmployeeCertificates.map((cert) => (
+                                    <div key={cert.id} className="border rounded-lg p-4 hover:bg-gray-50 transition">
+                                        <div className="flex items-start justify-between">
+                                            <div className="flex-1">
+                                                <h5 className="font-semibold text-gray-800">{cert.nombre}</h5>
+                                                <p className="text-xs text-gray-500 mt-1">Subido: {cert.fecha}</p>
+                                            </div>
+                                            <a
+                                                href={cert.url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="ml-2 px-3 py-1 bg-blue-100 text-blue-700 rounded text-sm hover:bg-blue-200 transition flex items-center"
+                                            >
+                                                <i className="fas fa-download mr-1"></i>
+                                                Ver
+                                            </a>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                    
+                    <div className="mt-6 flex justify-end">
+                        <button
+                            onClick={() => setShowCertificatesModal(false)}
+                            className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition"
+                        >
+                            Cerrar
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
     );
 };

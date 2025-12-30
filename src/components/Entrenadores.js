@@ -14,12 +14,11 @@ import {
   onAuthStateChanged,
   signOut
 } from 'firebase/auth';
-import { FaTimes, FaQrcode, FaCamera } from 'react-icons/fa';
+import { FaTimes } from 'react-icons/fa';
 
 import { db, auth } from '../firebase';
 import { cloudinaryConfig } from '../firebase';
 import QRCodeModal from './QRCodeModal';
-import QRScannerModal from './QRScannerModal';
 
 
 const TrainerDashboard = () => {
@@ -34,7 +33,6 @@ const TrainerDashboard = () => {
   const [showSidebar, setShowSidebar] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showMyQR, setShowMyQR] = useState(false);
-  const [showQRScanner, setShowQRScanner] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [metrics, setMetrics] = useState({
     peso: 0,
@@ -56,6 +54,22 @@ const TrainerDashboard = () => {
   const [bmiWeight, setBmiWeight] = useState('');
   const [bmiHeight, setBmiHeight] = useState('');
   const [bmiResult, setBmiResult] = useState(null);
+  const [trainerCertificates, setTrainerCertificates] = useState([]);
+  const [certFile, setCertFile] = useState(null);
+  const [certName, setCertName] = useState('');
+  const [isUploadingCert, setIsUploadingCert] = useState(false);
+  const [routineObjective, setRoutineObjective] = useState('Pérdida de peso');
+  const [routineFrequency, setRoutineFrequency] = useState('3 días');
+  const [routineDetails, setRoutineDetails] = useState('');
+  const [loadingRoutine, setLoadingRoutine] = useState(false);
+  const [medicalHistory, setMedicalHistory] = useState({
+    condiciones: '',
+    lesiones: '',
+    alergias: '',
+    medicamentos: '',
+    notas: ''
+  });
+  const [loadingMedical, setLoadingMedical] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
@@ -73,6 +87,7 @@ const TrainerDashboard = () => {
   useEffect(() => {
     if (user) {
       loadClients();
+      loadTrainerCertificates();
     }
   }, [user]);
 
@@ -146,6 +161,8 @@ const TrainerDashboard = () => {
       
       await loadClientMetrics(clientId);
       await loadClientProgress(clientId);
+      await loadClientRoutine(clientId);
+      await loadClientMedicalHistory(clientId);
       
       setShowModal(true);
       setActiveClientTab('metrics-tab');
@@ -322,15 +339,190 @@ const TrainerDashboard = () => {
       alert('No se pudo cerrar sesión. Intenta nuevamente.');
     }
   };
+  
+  const loadTrainerCertificates = async () => {
+    try {
+      const certDoc = await getDoc(doc(db, 'certificaciones', user.uid));
+      if (certDoc.exists()) {
+        setTrainerCertificates(certDoc.data().certificados || []);
+      }
+    } catch (error) {
+    }
+  };
+
+  const uploadCertificate = async () => {
+    if (!certFile || !certName.trim()) {
+      alert('Por favor ingresa un nombre y selecciona un archivo');
+      return;
+    }
+
+    setIsUploadingCert(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', certFile);
+      formData.append('upload_preset', cloudinaryConfig.uploadPreset);
+      formData.append('folder', 'certificaciones_entrenadores');
+
+      const response = await fetch(cloudinaryConfig.uploadUrl, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Error al subir el certificado');
+      }
+
+      const data = await response.json();
+      const fileUrl = data.secure_url;
+
+      const newCertificate = {
+        id: Date.now(),
+        nombre: certName,
+        url: fileUrl,
+        fecha: new Date().toLocaleDateString(),
+        tipo: certFile.type
+      };
+
+      const certificadosArray = [...trainerCertificates, newCertificate];
+      await setDoc(doc(db, 'certificaciones', user.uid), {
+        certificados: certificadosArray,
+        ultimaActualizacion: serverTimestamp()
+      }, { merge: true });
+
+      setTrainerCertificates(certificadosArray);
+      setCertFile(null);
+      setCertName('');
+      alert('Certificado subido exitosamente');
+    } catch (error) {
+      alert('Error al subir certificado: ' + error.message);
+    } finally {
+      setIsUploadingCert(false);
+    }
+  };
+
+  const deleteCertificate = async (certId) => {
+    if (!window.confirm('¿Estás seguro de que deseas eliminar este certificado?')) {
+      return;
+    }
+
+    try {
+      const updatedCerts = trainerCertificates.filter(cert => cert.id !== certId);
+      await setDoc(doc(db, 'certificaciones', user.uid), {
+        certificados: updatedCerts,
+        ultimaActualizacion: serverTimestamp()
+      }, { merge: true });
+
+      setTrainerCertificates(updatedCerts);
+      alert('Certificado eliminado');
+    } catch (error) {
+      alert('Error al eliminar certificado');
+    }
+  };
+
+  const loadClientRoutine = async (clientId) => {
+    try {
+      const routineDoc = await getDoc(doc(db, 'rutinas', clientId));
+      if (routineDoc.exists()) {
+        const data = routineDoc.data();
+        setRoutineObjective(data.objetivo || 'Pérdida de peso');
+        setRoutineFrequency(data.frecuencia || '3 días');
+        setRoutineDetails(data.detalles || '');
+      } else {
+        setRoutineObjective('Pérdida de peso');
+        setRoutineFrequency('3 días');
+        setRoutineDetails('');
+      }
+    } catch (error) {
+    }
+  };
+
+  const saveClientRoutine = async () => {
+    if (!currentClientId) {
+      alert('No hay un cliente seleccionado');
+      return;
+    }
+
+    if (!routineDetails.trim()) {
+      alert('Por favor ingresa los detalles de la rutina');
+      return;
+    }
+
+    setLoadingRoutine(true);
+    try {
+      const routineData = {
+        objetivo: routineObjective,
+        frecuencia: routineFrequency,
+        detalles: routineDetails,
+        entrenadorId: user.uid,
+        entrenador: user.displayName || user.email,
+        fechaActualizacion: serverTimestamp()
+      };
+
+      await setDoc(doc(db, 'rutinas', currentClientId), routineData, { merge: true });
+      alert('Rutina guardada exitosamente');
+    } catch (error) {
+      alert('Error al guardar la rutina: ' + error.message);
+    } finally {
+      setLoadingRoutine(false);
+    }
+  };
+
+  const loadClientMedicalHistory = async (clientId) => {
+    try {
+      const medicalDoc = await getDoc(doc(db, 'historialMedico', clientId));
+      if (medicalDoc.exists()) {
+        const data = medicalDoc.data();
+        setMedicalHistory({
+          condiciones: data.condiciones || '',
+          lesiones: data.lesiones || '',
+          alergias: data.alergias || '',
+          medicamentos: data.medicamentos || '',
+          notas: data.notas || ''
+        });
+      } else {
+        setMedicalHistory({
+          condiciones: '',
+          lesiones: '',
+          alergias: '',
+          medicamentos: '',
+          notas: ''
+        });
+      }
+    } catch (error) {
+    }
+  };
+
+  const saveMedicalHistory = async () => {
+    if (!currentClientId) {
+      alert('No hay un cliente seleccionado');
+      return;
+    }
+
+    setLoadingMedical(true);
+    try {
+      const medicalData = {
+        condiciones: medicalHistory.condiciones,
+        lesiones: medicalHistory.lesiones,
+        alergias: medicalHistory.alergias,
+        medicamentos: medicalHistory.medicamentos,
+        notas: medicalHistory.notas,
+        entrenadorId: user.uid,
+        entrenador: user.displayName || user.email,
+        fechaActualizacion: serverTimestamp()
+      };
+
+      await setDoc(doc(db, 'historialMedico', currentClientId), medicalData, { merge: true });
+      alert('Historial médico actualizado exitosamente');
+    } catch (error) {
+      alert('Error al guardar historial médico: ' + error.message);
+    } finally {
+      setLoadingMedical(false);
+    }
+  };
   const formatDate = (timestamp) => {
     if (!timestamp) return 'No especificado';
     const date = new Date(timestamp.seconds * 1000);
     return date.toLocaleDateString();
-  };
-
-  const handleClientScan = (clientId) => {
-    setShowQRScanner(false);
-    viewClientDetails(clientId);
   };
 
   return (
@@ -415,14 +607,9 @@ const TrainerDashboard = () => {
                     onClick={handleSignOut}
                     className="w-full text-left px-3 py-2 hover:bg-gray-100"
                   >
-                    <i className="fas fa-qrcode mr-2"></i>Mi Código QR
+                    <i className="fas fa-qrcode mr-2"></i>Cerrar sesión
                   </button>
-                  <button 
-                    onClick={() => setShowMyQR(true)}
-                    className="w-full text-left px-3 py-2 hover:bg-gray-100 flex items-center"
-                  >
-                    Cerrar sesión
-                  </button>
+                
                 </div>
               )}
             </div>
@@ -451,12 +638,6 @@ const TrainerDashboard = () => {
               <div className="mb-6 flex justify-between items-center">
                 <div className="flex items-center space-x-4">
                   <h3 className="text-lg font-medium">Lista de Clientes</h3>
-                  <button 
-                    onClick={() => setShowQRScanner(true)}
-                    className="px-3 py-1.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 flex items-center text-sm"
-                  >
-                    <FaCamera className="mr-2" /> Escanear QR de Cliente
-                  </button>
                 </div>
                 <div className="relative">
                   <input
@@ -595,8 +776,90 @@ const TrainerDashboard = () => {
                 <p className="text-gray-500">Sube tus certificaciones como entrenador y de entrenamiento médico.</p>
               </div>
               
-              <div className="bg-white p-6 rounded-xl shadow-sm border">
-                <p className="text-gray-600">Sección de certificaciones - Implementar según necesidades</p>
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-1">
+                  <div className="bg-white p-6 rounded-xl shadow-sm border">
+                    <h4 className="font-medium mb-4">Subir Nueva Certificación</h4>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Nombre de la certificación
+                        </label>
+                        <input
+                          type="text"
+                          value={certName}
+                          onChange={(e) => setCertName(e.target.value)}
+                          className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                          placeholder="Ej: Certificación IFBB"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Archivo (PDF, imagen)
+                        </label>
+                        <input
+                          type="file"
+                          onChange={(e) => setCertFile(e.target.files[0])}
+                          className="hidden"
+                          id="cert-upload"
+                          accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                        />
+                        <button
+                          onClick={() => document.getElementById('cert-upload').click()}
+                          className="w-full p-2 border-2 border-dashed border-indigo-300 rounded-lg hover:bg-indigo-50 text-indigo-600 font-medium"
+                        >
+                          {certFile ? certFile.name : '📁 Seleccionar archivo'}
+                        </button>
+                      </div>
+                      <button
+                        onClick={uploadCertificate}
+                        disabled={!certFile || !certName.trim() || isUploadingCert}
+                        className="w-full px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                      >
+                        {isUploadingCert ? 'Subiendo...' : '⬆️ Subir Certificación'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="lg:col-span-2">
+                  <div className="bg-white p-6 rounded-xl shadow-sm border">
+                    <h4 className="font-medium mb-4">Mis Certificaciones ({trainerCertificates.length})</h4>
+                    {trainerCertificates.length === 0 ? (
+                      <div className="text-center py-8 text-gray-500">
+                        <i className="fas fa-certificate text-4xl mb-2" style={{display: 'block'}}></i>
+                        <p>No tienes certificaciones subidas aún</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {trainerCertificates.map((cert) => (
+                          <div key={cert.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
+                            <div className="flex-1">
+                              <p className="font-medium text-gray-800">{cert.nombre}</p>
+                              <p className="text-xs text-gray-500">Subido: {cert.fecha}</p>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <a
+                                href={cert.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="px-3 py-1 bg-blue-100 text-blue-700 rounded text-sm hover:bg-blue-200"
+                              >
+                                Ver
+                              </a>
+                              <button
+                                onClick={() => deleteCertificate(cert.id)}
+                                className="px-3 py-1 bg-red-100 text-red-700 rounded text-sm hover:bg-red-200"
+                              >
+                                Eliminar
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
           )}
@@ -610,12 +873,6 @@ const TrainerDashboard = () => {
           value={user.uid}
           studentName={user.displayName || user.email} />
       )}
-
-      <QRScannerModal
-        isOpen={showQRScanner}
-        onClose={() => setShowQRScanner(false)}
-        onScan={handleClientScan}
-      />
 
       {showModal && currentClient && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-2 sm:p-4">
@@ -930,34 +1187,75 @@ const TrainerDashboard = () => {
                     <h5 className="font-medium mb-4">Historial Médico</h5>
                     <div className="space-y-4">
                       <div>
-                        <p className="text-sm text-gray-500 mb-1">Condiciones médicas</p>
-                        <p className="font-medium">Ninguna conocida</p>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Condiciones médicas
+                        </label>
+                        <textarea
+                          value={medicalHistory.condiciones}
+                          onChange={(e) => setMedicalHistory({...medicalHistory, condiciones: e.target.value})}
+                          className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                          rows="2"
+                          placeholder="Ej: Hipertensión, Diabetes, etc."
+                        />
                       </div>
                       <div>
-                        <p className="text-sm text-gray-500 mb-1">Lesiones previas</p>
-                        <p className="font-medium">Esguince de tobillo derecho (2020)</p>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Lesiones previas
+                        </label>
+                        <textarea
+                          value={medicalHistory.lesiones}
+                          onChange={(e) => setMedicalHistory({...medicalHistory, lesiones: e.target.value})}
+                          className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                          rows="2"
+                          placeholder="Ej: Esguince de tobillo (2020), Fracturas, etc."
+                        />
                       </div>
                       <div>
-                        <p className="text-sm text-gray-500 mb-1">Alergias</p>
-                        <p className="font-medium">Ninguna conocida</p>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Alergias
+                        </label>
+                        <textarea
+                          value={medicalHistory.alergias}
+                          onChange={(e) => setMedicalHistory({...medicalHistory, alergias: e.target.value})}
+                          className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                          rows="2"
+                          placeholder="Ej: Polen, Penicilina, Mariscos, etc."
+                        />
                       </div>
                       <div>
-                        <p className="text-sm text-gray-500 mb-1">Medicamentos</p>
-                        <p className="font-medium">Ninguno actualmente</p>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Medicamentos actuales
+                        </label>
+                        <textarea
+                          value={medicalHistory.medicamentos}
+                          onChange={(e) => setMedicalHistory({...medicalHistory, medicamentos: e.target.value})}
+                          className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                          rows="2"
+                          placeholder="Ej: Ibuprofeno 400mg diarios, etc."
+                        />
                       </div>
                       <div>
-                        <p className="text-sm text-gray-500 mb-1">Notas adicionales</p>
-                        <p className="font-medium">
-                          El cliente reporta molestias ocasionales en la rodilla izquierda durante ejercicios de impacto.
-                        </p>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Notas médicas adicionales
+                        </label>
+                        <textarea
+                          value={medicalHistory.notas}
+                          onChange={(e) => setMedicalHistory({...medicalHistory, notas: e.target.value})}
+                          className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                          rows="3"
+                          placeholder="Ej: Limitaciones de ejercicio, recomendaciones médicas, etc."
+                        />
                       </div>
                     </div>
                   </div>
-                  <div className="text-sm text-gray-500">
-                    <p>
-                      <i className="fas fa-info-circle mr-2"></i>
-                      El historial médico solo puede ser editado por el cliente desde su perfil.
-                    </p>
+                  <div className="flex justify-end">
+                    <button
+                      onClick={saveMedicalHistory}
+                      disabled={loadingMedical}
+                      className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                    >
+                      {loadingMedical ? 'Guardando...' : '📋 Guardar Historial'}
+                    </button>
                   </div>
                 </div>
               )}
@@ -971,7 +1269,11 @@ const TrainerDashboard = () => {
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                           Objetivo de la rutina
                         </label>
-                        <select className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        <select 
+                          value={routineObjective}
+                          onChange={(e) => setRoutineObjective(e.target.value)}
+                          className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                        >
                           <option>Pérdida de peso</option>
                           <option>Ganancia muscular</option>
                           <option>Tonificación</option>
@@ -983,7 +1285,11 @@ const TrainerDashboard = () => {
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                           Frecuencia semanal
                         </label>
-                        <select className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        <select 
+                          value={routineFrequency}
+                          onChange={(e) => setRoutineFrequency(e.target.value)}
+                          className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                        >
                           <option>2 días</option>
                           <option>3 días</option>
                           <option>4 días</option>
@@ -996,34 +1302,22 @@ const TrainerDashboard = () => {
                           Detalles de la rutina
                         </label>
                         <textarea 
+                          value={routineDetails}
+                          onChange={(e) => setRoutineDetails(e.target.value)}
                           className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" 
                           rows="6"
-                          defaultValue={`Lunes (Pierna):
-- Sentadillas 4x12
-- Peso muerto 3x10
-- Prensa 3x12
-- Elevación de talones 4x15
-
-Miércoles (Espalda/Bíceps):
-- Dominadas asistidas 3x8
-- Remo con barra 4x10
-- Curl de bíceps 3x12
-- Jalón al pecho 3x12
-
-Viernes (Pecho/Tríceps):
-- Press banca 4x10
-- Fondos 3x12
-- Aperturas 3x12
-- Extensión de tríceps 3x15
-
-Notas: Descansar 60-90 segundos entre series. Mantener buena forma en todos los ejercicios.`}
+                          placeholder="Describe la rutina día a día con ejercicios, series y repeticiones..."
                         />
                       </div>
                     </div>
                   </div>
                   <div className="flex justify-end">
-                    <button className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
-                      Actualizar Rutina
+                    <button 
+                      onClick={saveClientRoutine}
+                      disabled={loadingRoutine}
+                      className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                    >
+                      {loadingRoutine ? 'Guardando...' : '💾 Actualizar Rutina'}
                     </button>
                   </div>
                 </div>

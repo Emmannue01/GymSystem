@@ -24,6 +24,11 @@ const Usuarios = () => {
   const [showQR, setShowQR] = useState(false);
   const [showQRScanner, setShowQRScanner] = useState(false);
   const dbRTDB = getDatabase();
+  const [routine, setRoutine] = useState(null);
+  const [medicalHistory, setMedicalHistory] = useState(null);
+  const [loadingRoutine, setLoadingRoutine] = useState(false);
+  const [loadingMedical, setLoadingMedical] = useState(false);
+  const [activeTab, setActiveTab] = useState('progress');
   const inicializarProgreso = useCallback((uid) => {
     const lecturasRef = ref(dbRTDB, 'lecturas');
 
@@ -84,6 +89,8 @@ const Usuarios = () => {
             if (savedMetaSemanal) setMetaSemanal(parseInt(savedMetaSemanal));
             if (savedMetaMensual) setMetaMensual(parseInt(savedMetaMensual));
             inicializarMetricas(checkinUid);
+            loadClientRoutine(currentUser.uid);
+            loadClientMedicalHistory(currentUser.uid);
           }
         } catch (error) {}
       } else {
@@ -241,6 +248,32 @@ const Usuarios = () => {
         } 
     } catch (error) {
         alert('Error al registrar la asistencia: ' + error.message);
+    }
+  };
+
+  const loadClientRoutine = async (userId) => {
+    try {
+      setLoadingRoutine(true);
+      const routineDoc = await getDoc(doc(db, 'rutinas', userId));
+      if (routineDoc.exists()) {
+        setRoutine(routineDoc.data());
+      }
+    } catch (error) {
+    } finally {
+      setLoadingRoutine(false);
+    }
+  };
+
+  const loadClientMedicalHistory = async (userId) => {
+    try {
+      setLoadingMedical(true);
+      const medicalDoc = await getDoc(doc(db, 'historialMedico', userId));
+      if (medicalDoc.exists()) {
+        setMedicalHistory(medicalDoc.data());
+      }
+    } catch (error) {
+    } finally {
+      setLoadingMedical(false);
     }
   };
 
@@ -477,6 +510,110 @@ const Usuarios = () => {
             <div className="text-2xl font-bold">{imc || '--'}</div>
           </div>
         </div>
+
+        <div className="mb-6 flex flex-wrap gap-2">
+          
+          <button
+            onClick={() => setActiveTab('routine')}
+            className={`px-4 py-2 rounded-lg font-medium transition-all ${
+              activeTab === 'routine'
+                ? 'bg-indigo-600 text-white shadow-md'
+                : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+            }`}
+          >
+            Mi Rutina
+          </button>
+          <button
+            onClick={() => setActiveTab('medical')}
+            className={`px-4 py-2 rounded-lg font-medium transition-all ${
+              activeTab === 'medical'
+                ? 'bg-indigo-600 text-white shadow-md'
+                : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+            }`}
+          >
+            Historial Médico
+          </button>
+        </div>
+
+        {activeTab === 'routine' && (
+          <div className="bg-white rounded-xl shadow-md p-6 mb-6">
+            <h3 className="text-2xl font-bold mb-4">Mi Rutina de Entrenamiento</h3>
+            {loadingRoutine ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500"></div>
+              </div>
+            ) : routine ? (
+              <div className="space-y-4">
+                <div>
+                  <h4 className="font-semibold text-gray-700">Objetivo</h4>
+                  <p className="text-gray-600">{routine.objetivo || 'No especificado'}</p>
+                </div>
+                <div>
+                  <h4 className="font-semibold text-gray-700">Frecuencia semanal</h4>
+                  <p className="text-gray-600">{routine.frecuencia || 'No especificada'}</p>
+                </div>
+                <div>
+                  <h4 className="font-semibold text-gray-700">Detalles de la rutina</h4>
+                  <pre className="bg-gray-100 p-4 rounded-lg text-sm text-gray-600 overflow-auto whitespace-pre-wrap">
+                    {routine.detalles || 'No hay detalles disponibles'}
+                  </pre>
+                </div>
+                <div className="text-xs text-gray-500 mt-4">
+                  <p>Creada por: {routine.entrenador || 'Sin asignar'}</p>
+                  <p>Última actualización: {routine.fechaActualizacion?.toDate ? new Date(routine.fechaActualizacion.toDate()).toLocaleDateString('es-ES') : 'No disponible'}</p>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                <p className="text-lg">No tienes una rutina asignada aún</p>
+                <p className="text-sm">Solicita a tu entrenador que te cree una rutina personalizada</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'medical' && (
+          <div className="bg-white rounded-xl shadow-md p-6 mb-6">
+            <h3 className="text-2xl font-bold mb-4">Historial Médico</h3>
+            {loadingMedical ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500"></div>
+              </div>
+            ) : medicalHistory ? (
+              <div className="space-y-4">
+                <div>
+                  <h4 className="font-semibold text-gray-700">Condiciones médicas</h4>
+                  <p className="text-gray-600 whitespace-pre-wrap">{medicalHistory.condiciones || 'Ninguna conocida'}</p>
+                </div>
+                <div>
+                  <h4 className="font-semibold text-gray-700">Lesiones previas</h4>
+                  <p className="text-gray-600 whitespace-pre-wrap">{medicalHistory.lesiones || 'Ninguna conocida'}</p>
+                </div>
+                <div>
+                  <h4 className="font-semibold text-gray-700">Alergias</h4>
+                  <p className="text-gray-600 whitespace-pre-wrap">{medicalHistory.alergias || 'Ninguna conocida'}</p>
+                </div>
+                <div>
+                  <h4 className="font-semibold text-gray-700">Medicamentos actuales</h4>
+                  <p className="text-gray-600 whitespace-pre-wrap">{medicalHistory.medicamentos || 'Ninguno actualmente'}</p>
+                </div>
+                <div>
+                  <h4 className="font-semibold text-gray-700">Notas médicas adicionales</h4>
+                  <p className="text-gray-600 whitespace-pre-wrap">{medicalHistory.notas || 'Sin notas'}</p>
+                </div>
+                <div className="text-xs text-gray-500 mt-4 pt-4 border-t border-gray-200">
+                  <p>Actualizado por: {medicalHistory.entrenador || 'Sin asignar'}</p>
+                  <p>Última actualización: {medicalHistory.fechaActualizacion?.toDate ? new Date(medicalHistory.fechaActualizacion.toDate()).toLocaleDateString('es-ES') : 'No disponible'}</p>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                <p className="text-lg">Tu historial médico aún no ha sido registrado</p>
+                <p className="text-sm">Tu entrenador lo completará según sea necesario</p>
+              </div>
+            )}
+          </div>
+        )}
       </main>
 
       {user && userData && (
