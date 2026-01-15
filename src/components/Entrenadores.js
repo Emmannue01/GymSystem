@@ -14,7 +14,7 @@ import {
   onAuthStateChanged,
   signOut
 } from 'firebase/auth';
-import { FaTimes } from 'react-icons/fa';
+import { FaTimes, FaBars } from 'react-icons/fa';
 
 import { db, auth } from '../firebase';
 import { cloudinaryConfig } from '../firebase';
@@ -527,109 +527,130 @@ const TrainerDashboard = () => {
 
   return (
     <div className="flex h-screen overflow-hidden bg-gray-100">
-      <div className={`sidebar bg-indigo-800 text-white w-64 flex-shrink-0 fixed md:relative z-50 h-full transition-transform duration-300 ${showSidebar ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
-        <button 
-          className="md:hidden absolute right-4 top-4 text-white"
+      {/* Overlay for mobile sidebar */}
+      {showSidebar && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
           onClick={() => setShowSidebar(false)}
-        >
-          <i className="fas fa-times"></i>
-        </button>
-        
-        <div className="p-4 flex items-center space-x-2 border-b border-indigo-700">
-          <i className="fas fa-dumbbell text-2xl"></i>
-          <h1 className="text-xl font-bold">FitCoach Pro</h1>
+        ></div>
+      )}
+      
+<div className={`sidebar bg-indigo-900 text-white w-64 flex-shrink-0 fixed md:relative z-50 h-full transition-transform duration-300 overflow-y-auto ${showSidebar ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
+        <div className="flex items-center justify-between h-16 px-4 border-b border-indigo-800">
+          <div className="flex items-center">
+            <i className="fas fa-dumbbell text-2xl text-yellow-400 mr-2"></i>
+            <span className="text-xl font-bold text-white">FitCoach</span>
+          </div>
+          <button onClick={() => setShowSidebar(false)} className="md:hidden text-indigo-300 hover:text-white">
+            <i className="fas fa-times text-xl"></i>
+          </button>
         </div>
-        
-        <nav className="p-4">
-          <div className="mb-6">
-            <h2 className="text-xs uppercase tracking-wider text-indigo-300 mb-2">Clientes</h2>
-            <ul>
-              <li className="mb-1">
-                <button 
-                  onClick={() => setActiveTab('client-tab')}
-                  className={`w-full text-left px-3 py-2 rounded hover:bg-indigo-700 flex items-center space-x-2 ${activeTab === 'client-tab' ? 'bg-indigo-700' : ''}`}
-                >
-                  <i className="fas fa-users"></i>
-                  <span>Mis Clientes</span>
-                </button>
-              </li>
-            </ul>
-          </div>
-          
-          <div className="mb-6">
-            <h2 className="text-xs uppercase tracking-wider text-indigo-300 mb-2">Administración</h2>
-            <ul>
-              <li className="mb-1">
-                <button 
-                  onClick={() => setActiveTab('certifications-tab')}
-                  className={`w-full text-left px-3 py-2 rounded hover:bg-indigo-700 flex items-center space-x-2 ${activeTab === 'certifications-tab' ? 'bg-indigo-700' : ''}`}
-                >
-                  <i className="fas fa-certificate"></i>
-                  <span>Certificaciones</span>
-                </button>
-              </li>
-              <li className="mb-1">
-                <button 
-                  onClick={() => setActiveTab('bmi-tab')}
-                  className={`w-full text-left px-3 py-2 rounded hover:bg-indigo-700 flex items-center space-x-2 ${activeTab === 'bmi-tab' ? 'bg-indigo-700' : ''}`}
-                >
-                  <i className="fas fa-calculator"></i>
-                  <span>Calculadora IMC</span>
-                </button>
-              </li>
-            </ul>
-          </div>
-        </nav>
-        
-        {user && (
-          <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-indigo-700">
-            <div 
-              className="relative flex items-center space-x-3 cursor-pointer"
-              onClick={() => setShowProfileMenu(!showProfileMenu)}
+
+        <div className="p-4 flex-1 overflow-y-auto">
+          <nav className="space-y-2">
+            <style>{`
+              .nav-item {
+                display: flex;
+                align-items: center;
+                width: 100%;
+                padding: 0.75rem 1rem;
+                border-radius: 0.375rem;
+                color: #A5B4FC;
+                transition: background-color 0.2s, color 0.2s;
+                border: none;
+                background: none;
+                cursor: pointer;
+                font-size: inherit;
+              }
+              .nav-item:hover {
+                background-color: #4338CA;
+                color: white;
+              }
+              .nav-item.active {
+                background-color: #4338CA;
+                color: white;
+              }
+            `}</style>
+            <button 
+              className={`nav-item ${activeTab === 'client-tab' ? 'active' : ''}`}
+              onClick={() => {
+                setActiveTab('client-tab');
+                setShowSidebar(false);
+              }}
             >
-              <img 
-                src={user.photoURL || 'https://randomuser.me/api/portraits/men/47.jpg'} 
-                alt="Profile" 
-                className="w-10 h-10 rounded-full object-cover border-2 border-indigo-100"
-              />
-              <div className="flex-1">
-                <p className="font-medium">{user.displayName || user.email}</p>
-                <p className="text-xs text-indigo-300">Entrenador Certificado</p>
-              </div>
-              
+              <i className="fas fa-users mr-3"></i>
+              <span>Mis Clientes</span>
+            </button>
+            <button 
+              className={`nav-item ${activeTab === 'certifications-tab' ? 'active' : ''}`}
+              onClick={() => {
+                setActiveTab('certifications-tab');
+                setShowSidebar(false);
+              }}
+            >
+              <i className="fas fa-certificate mr-3"></i>
+              <span>Certificaciones</span>
+            </button>
+            <button 
+              className={`nav-item ${activeTab === 'bmi-tab' ? 'active' : ''}`}
+              onClick={() => {
+                setActiveTab('bmi-tab');
+                setShowSidebar(false);
+              }}
+            >
+              <i className="fas fa-calculator mr-3"></i>
+              <span>Calculadora IMC</span>
+            </button>
+          </nav>
+        </div>
+      </div>
+
+      <div className="flex-1 overflow-auto">
+        <header className="bg-white shadow sticky top-0 z-10">
+          <div className="px-4 py-3 flex justify-between items-center">
+            <div className="flex items-center gap-3 flex-1">
+              <button 
+                className="md:hidden text-indigo-600 hover:text-indigo-800 p-2 rounded hover:bg-gray-100 active:bg-gray-200"
+                onClick={() => setShowSidebar(true)}
+                aria-label="Abrir menú"
+              >
+                <FaBars className="text-xl" />
+              </button>
+              <h2 className="text-base md:text-lg font-bold text-gray-800 truncate">
+                {activeTab === 'client-tab' && 'Mis Clientes'}
+                {activeTab === 'certifications-tab' && 'Certificaciones'}
+                {activeTab === 'bmi-tab' && 'Calculadora IMC'}
+              </h2>
+            </div>
+            <div className="relative flex-shrink-0">
+              <button
+                onClick={() => setShowProfileMenu(!showProfileMenu)}
+                className="flex items-center space-x-2 hover:opacity-80 focus:outline-none p-1"
+              >
+                <img
+                  src={user?.photoURL || 'https://randomuser.me/api/portraits/men/47.jpg'}
+                  alt="Perfil"
+                  className="h-8 w-8 md:h-10 md:w-10 rounded-full object-cover border-2 border-indigo-300"
+                />
+                <span className="hidden md:inline text-sm text-gray-700 truncate max-w-xs">{user?.displayName || 'Usuario'}</span>
+              </button>
               {showProfileMenu && (
-                <div className="absolute bottom-14 right-0 w-44 bg-white text-indigo-800 rounded-md shadow-lg z-50 overflow-hidden">
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 ring-1 ring-black ring-opacity-5">
                   <div className="px-3 py-2 border-b border-gray-100">
-                    <p className="text-sm font-medium">{user.displayName}</p>
-                    <p className="text-xs text-gray-500">{user.email}</p>
+                    <p className="text-sm font-medium truncate">{user?.displayName}</p>
+                    <p className="text-xs text-gray-500 truncate">{user?.email}</p>
                   </div>
-                  <button 
+                  <button
                     onClick={handleSignOut}
-                    className="w-full text-left px-3 py-2 hover:bg-gray-100"
+                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
                   >
-                    <i className="fas fa-qrcode mr-2"></i>Cerrar sesión
+                    <i className="fas fa-sign-out-alt"></i>
+                    <span>Cerrar sesión</span>
                   </button>
-                
                 </div>
               )}
             </div>
           </div>
-        )}
-      </div>
-
-      <div className="flex-1 overflow-auto">
-        <header className="bg-white shadow-sm p-4 flex justify-between items-center">
-          <button 
-            className="md:hidden text-gray-600"
-            onClick={() => setShowSidebar(true)}
-          >
-            <i className="fas fa-bars"></i>
-          </button>
-          <h2 className="text-xl font-semibold text-gray-800">
-            {activeTab === 'client-tab' && 'Mis Clientes'}
-            {activeTab === 'certifications-tab' && 'Certificaciones'}
-            {activeTab === 'bmi-tab' && 'Calculadora IMC'}
-          </h2>
         </header>
 
         <main className="p-6">
@@ -1326,6 +1347,7 @@ const TrainerDashboard = () => {
           </div>
         </div>
       )}
+      
     </div>
   );
 };

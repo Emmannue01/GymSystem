@@ -554,19 +554,23 @@ const RecepcionDashboard = () => {
           <div className="relative">
             <button
               onClick={() => setShowUserMenu(!showUserMenu)}
-              className="flex items-center space-x-2 focus:outline-none"
+              className="flex items-center space-x-2 focus:outline-none hover:opacity-80"
             >
               <img
                 src={usuario.avatar}
                 alt="User"
                 className="h-8 w-8 rounded-full"
               />
-              <span className="hidden md:block">{usuario.nombre}</span>
+              <span className="hidden md:block text-gray-700">{usuario.nombre}</span>
               <ChevronDown className="h-4 w-4 hidden md:block" />
             </button>
             
             {showUserMenu && (
               <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10">
+                <div className="px-3 py-2 border-b border-gray-100">
+                  <p className="text-sm font-medium truncate">{usuario.nombre}</p>
+                  <p className="text-xs text-gray-500 truncate">{usuario.email}</p>
+                </div>
                 <button
                   onClick={cerrarSesion}
                   className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
