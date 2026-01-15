@@ -29,9 +29,7 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject",
-    "security-check": "npm audit && echo 'Verifica que no haya vulnerabilidades'",
-    "verify-env": "node -e \"require('dotenv').config(); console.log('✓ Archivo .env.local cargado correctamente')\""
+    "eject": "react-scripts eject"
   },
   "eslintConfig": {
     "extends": [

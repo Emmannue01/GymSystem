@@ -1,21 +1,7 @@
 /**
  * Configuración de Seguridad
- * No expongas datos sensibles en el cliente
+ * Validación y sanitización de datos
  */
-
-// Validar que las variables de entorno estén configuradas
-export const validateEnvironment = () => {
-  const requiredVars = [
-    'REACT_APP_FIREBASE_API_KEY',
-    'REACT_APP_FIREBASE_PROJECT_ID',
-  ];
-
-  requiredVars.forEach(varName => {
-    if (!process.env[varName]) {
-      console.warn(`⚠️ Variable de entorno faltante: ${varName}`);
-    }
-  });
-};
 
 // Sanitizar datos antes de enviar a Firestore
 export const sanitizeInput = (input) => {
@@ -48,45 +34,9 @@ export const getSafeErrorMessage = (error) => {
   return errorMessages[error.code] || 'Ocurrió un error. Intenta de nuevo.';
 };
 
-// Rate limiting simple (cliente)
-export class RateLimit {
-  constructor(maxAttempts = 5, windowMs = 60000) {
-    this.maxAttempts = maxAttempts;
-    this.windowMs = windowMs;
-    this.attempts = {};
-  }
-
-  check(identifier) {
-    const now = Date.now();
-    if (!this.attempts[identifier]) {
-      this.attempts[identifier] = [];
-    }
-
-    // Limpiar intentos antiguos
-    this.attempts[identifier] = this.attempts[identifier].filter(
-      time => now - time < this.windowMs
-    );
-
-    if (this.attempts[identifier].length >= this.maxAttempts) {
-      return false;
-    }
-
-    this.attempts[identifier].push(now);
-    return true;
-  }
-}
-
-// Tokens seguros
-export const generateSecureToken = () => {
-  return Math.random().toString(36).substring(2, 15);
-};
-
 export default {
-  validateEnvironment,
   sanitizeInput,
   isValidEmail,
   isValidPassword,
   getSafeErrorMessage,
-  RateLimit,
-  generateSecureToken,
 };
