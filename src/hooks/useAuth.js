@@ -4,10 +4,31 @@ import { auth } from '../firebase';
 
 /**
  * Hook para proteger rutas privadas
+ * Cierra sesión después de inactividad
  */
 export const useProtectedRoute = (allowedRoles, userRole) => {
   const navigate = useNavigate();
   const [isAuthorized, setIsAuthorized] = useState(false);
+  const inactivityTimeout = 30 * 60 * 1000; // 30 minutos
+  let inactivityTimer;
+
+  // Renovar timer al detectar actividad
+  const resetInactivityTimer = () => {
+    clearTimeout(inactivityTimer);
+    inactivityTimer = setTimeout(() => {
+      logout();
+    }, inactivityTimeout);
+  };
+
+  const logout = async () => {
+    try {
+      await auth.signOut();
+      sessionStorage.clear();
+      navigate('/', { replace: true });
+    } catch (error) {
+      console.error('Error al cerrar sesión:', error);
+    }
+  };
 
   useEffect(() => {
     if (!auth.currentUser) {
@@ -21,9 +42,25 @@ export const useProtectedRoute = (allowedRoles, userRole) => {
     }
 
     setIsAuthorized(true);
+
+    // Detectar actividad del usuario
+    const events = ['mousedown', 'keydown', 'scroll', 'touchstart'];
+    events.forEach(event => {
+      window.addEventListener(event, resetInactivityTimer);
+    });
+
+    // Iniciar timer
+    resetInactivityTimer();
+
+    return () => {
+      clearTimeout(inactivityTimer);
+      events.forEach(event => {
+        window.removeEventListener(event, resetInactivityTimer);
+      });
+    };
   }, [allowedRoles, userRole, navigate]);
 
-  return { isAuthorized };
+  return { isAuthorized, logout };
 };
 
 /**
