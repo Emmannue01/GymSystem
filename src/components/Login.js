@@ -5,6 +5,7 @@ import { GoogleAuthProvider,signInWithPopup,onAuthStateChanged } from 'firebase/
 import { doc,getDoc, query, collection, where,getDocs,writeBatch,setDoc,Timestamp } from 'firebase/firestore';
 import { cloudinaryConfig } from '../firebase';
 import { FaDumbbell, FaUsers, FaTrophy, FaLock, FaSpinner } from 'react-icons/fa';
+import LoginDev from './LoginDev';
 
 const styles = {
   bgGym: {
@@ -15,6 +16,11 @@ const styles = {
 };
 
 const Login = () => {
+    // En modo desarrollo, mostrar el login con selector de roles
+    if (process.env.REACT_APP_ENV === 'development') {
+        return <LoginDev />;
+    }
+
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
     const uploadProfileImageToCloudinary = async (imageUrl) => {

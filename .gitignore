@@ -5,3 +5,6 @@ node_modules
 .DS_Store
 build/
 dist/
+setup-dev.bat
+setup-dev.sh
+README-DEV.md
