@@ -19,11 +19,6 @@ const Login = () => {
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
 
-    // En modo desarrollo, mostrar el login con selector de roles
-    if (process.env.REACT_APP_ENV === 'development') {
-        return <LoginDev />;
-    }
-
     const uploadProfileImageToCloudinary = async (imageUrl) => {
         if (!imageUrl) return null;
 
@@ -131,6 +126,11 @@ const Login = () => {
 
         return () => unsubscribe();
     }, [navigate]);
+
+    // En modo desarrollo, mostrar el login con selector de roles
+    if (process.env.REACT_APP_ENV === 'development') {
+        return <LoginDev />;
+    }
 
     const handleGoogleLogin = async () => {
         const provider = new GoogleAuthProvider();
