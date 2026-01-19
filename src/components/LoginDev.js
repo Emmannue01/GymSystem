@@ -4,7 +4,7 @@ import { auth, db } from '../firebase';
 import { signInWithCustomToken, onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc, query, collection, where, getDocs, writeBatch, setDoc, Timestamp } from 'firebase/firestore';
 import { cloudinaryConfig } from '../firebase';
-import { FaDumbbell, FaUsers, FaTrophy, FaLock, FaSpinner, FaUserShield, FaChalkboardUser, FaDoorOpen, FaUserTie } from 'react-icons/fa';
+import { FaDumbbell, FaUsers, FaTrophy, FaLock, FaSpinner, FaUserShield, FaBook, FaDoorOpen, FaUserTie } from 'react-icons/fa';
 
 const styles = {
   bgGym: {
@@ -54,7 +54,7 @@ const Login = () => {
 
   const roleIcons = {
     admin: <FaUserShield className="text-3xl mb-2" />,
-    entrenador: <FaChalkboardUser className="text-3xl mb-2" />,
+    entrenador: <FaBook className="text-3xl mb-2" />,
     recepcion: <FaDoorOpen className="text-3xl mb-2" />,
     usuario: <FaUserTie className="text-3xl mb-2" />
   };
