@@ -20,7 +20,7 @@ export const DEMO_USERS = {
     lastname: 'Certificado',
     rol: 'entrenador',
     color: 'purple',
-    icon: 'chalkboard'
+    icon: 'book'
   },
   recepcion: {
     uid: 'demo-reception-001',
