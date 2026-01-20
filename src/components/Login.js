@@ -39,7 +39,12 @@ const Login = () => {
         }
     };
 
+    // Solo ejecutar en modo producción, NO en desarrollo
     useEffect(() => {
+        if (process.env.REACT_APP_ENV === 'development') {
+            return; // No hacer nada en desarrollo
+        }
+
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
             if (user) {
                 setLoading(true);
