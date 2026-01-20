@@ -33,9 +33,14 @@ const App = () => {
   const [userRole, setUserRole] = useState(null);
 
   useEffect(() => {
+    // En modo desarrollo, no verificar autenticación Firebase
+    if (process.env.REACT_APP_ENV === 'development') {
+      setLoading(false);
+      return;
+    }
+
     const unsubscribe = auth.onAuthStateChanged(async (user) => {
       if (user) {
-     
         try {
           const userDoc = await getDoc(doc(db, 'usuarios', user.uid));
           const role = userDoc.data()?.rol || 'cliente';
@@ -68,7 +73,10 @@ const App = () => {
         <Route 
           path="/" 
           element={
-            user ? (
+            // En desarrollo, siempre mostrar Login (que redirige a LoginDev)
+            process.env.REACT_APP_ENV === 'development' ? (
+              <Login />
+            ) : user ? (
               <Navigate 
                 to={
                   userRole === 'admin' ? '/Dashboard' :
