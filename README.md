@@ -1,0 +1,1 @@
+Sistema de control y administración de gimnasios completo. Con ventanas diferentes para entrenadores recepcionistas, administrador y usuarios. Todos confunciona, es totalmente diferentes y personalizadas dependiendo de la necesidad del cliente.
